@@ -1,4 +1,4 @@
-package de.davaso.teamwiki.model;
+package de.davaso.wikinetz.model;
 
 import java.time.LocalDateTime;
 

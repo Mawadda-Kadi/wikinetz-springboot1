@@ -1,7 +1,7 @@
-package de.davaso.teamwiki;
+package de.davaso.wikinetz;
 
-import de.davaso.teamwiki.model.Article;
-import de.davaso.teamwiki.model.ArticleManager;
+import de.davaso.wikinetz.model.Article;
+import de.davaso.wikinetz.model.ArticleManager;
 
 import java.util.List;
 import java.util.Scanner;

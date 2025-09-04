@@ -1,8 +1,7 @@
-package de.davaso.teamwiki.model;
+package de.davaso.wikinetz.model;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Scanner;
 
 
 public class ArticleManager {
@@ -13,12 +12,7 @@ public class ArticleManager {
     // Gibt jedem Artikel eine eindeutige, fortlaufende ID
     private int nextArticleId = 1;
 
-    /**
-     * Erstellt einen neuen Artikel und fügt ihn der Liste hinzu.
-     * @param title   Titel
-     * @param content Inhalt
-     * @return        der erstellte Artikel
-     */
+    // Erstellt einen neuen Artikel und fügt ihn der Liste hinzu.
     public Article addArticle(String title, String content) {
         Article a = new Article(nextArticleId++, title, content);
         articles.add(a);
