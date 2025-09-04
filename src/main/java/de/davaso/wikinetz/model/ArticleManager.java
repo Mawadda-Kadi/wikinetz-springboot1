@@ -12,9 +12,10 @@ public class ArticleManager {
     // Gibt jedem Artikel eine eindeutige, fortlaufende ID
     private int nextArticleId = 1;
 
+
     // Erstellt einen neuen Artikel und fügt ihn der Liste hinzu.
-    public Article addArticle(String title, String content) {
-        Article a = new Article(nextArticleId++, title, content);
+    public Article addArticle(String title, String content, Category category) {
+        Article a = new Article(nextArticleId++, title, content, category);
         articles.add(a);
         return a;
     }
@@ -38,6 +39,7 @@ public class ArticleManager {
      * Löscht einen Artikel per ID
      * @return true wenn gelöscht, sonst false
      */
+
     public boolean deleteArticleById(int id) {
         for (int i = 0; i < articles.size(); i++) {
             if (articles.get(i).getArticleId() == id) {

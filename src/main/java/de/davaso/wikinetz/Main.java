@@ -2,6 +2,7 @@ package de.davaso.wikinetz;
 
 import de.davaso.wikinetz.model.Article;
 import de.davaso.wikinetz.model.ArticleManager;
+import de.davaso.wikinetz.model.Category;
 
 import java.util.List;
 import java.util.Scanner;
@@ -52,7 +53,27 @@ public class Main {
         String title = scanner.nextLine();
         System.out.print("Inhalt: ");
         String content = scanner.nextLine();
-        Article a = manager.addArticle(title, content);
+        System.out.println("Kategori auswählen: ");
+
+        for (Category c : Category.values()) {
+            System.out.println(c.getCATEGORY_ID() + ") " + c.getCATEGORY_NAME());
+        }
+        System.out.println("Deine wahl: ");
+        String catStr= scanner.nextLine().trim();
+
+        Category category = null;
+        try {
+            int catId = Integer.parseInt(catStr);
+            category = Category.getCategoryById(catId);
+        } catch (NumberFormatException ignored)
+        {}
+
+        if (category == null)
+        {
+            System.out.println("Bitte eine bestehende Kategori auswählen.");
+        }
+
+        Article a = manager.addArticle(title, content, category);
         System.out.println("Hinzugefügt: " + a);
     }
 
@@ -62,9 +83,9 @@ public class Main {
             System.out.println("Keine Artikel vorhanden.");
             return;
         }
-        System.out.println("Artikel (ID - Titel):");
+        System.out.println("Artikel (id - Titel):" );
         for (Article a : all) {
-            System.out.println(a.getArticleId() + " - " + a.getTitle());
+            System.out.println(a.getArticleId() + " - " + a.getTitle() + " - ");
         }
     }
 
