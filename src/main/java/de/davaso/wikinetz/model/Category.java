@@ -3,10 +3,10 @@ package de.davaso.wikinetz.model;
 
 public enum Category {
     BACKEND(1, "Backend-Entwicklung"),
-    FRONTED(2, "Frontedend-Entwicklung"),
-    IT_SISCHERHEIT(3, "IT-Sicherheit"),
+    FRONTEND(2, "Frontend-Entwicklung"),
+    IT_SICHERHEIT(3, "IT-Sicherheit"),
     WARTUNG_INSTALLATION(4, "Wartung & Installation"),
-    CLOUD_VIRTUALISIRUNG(5, "Cloud & Vertualisirung");
+    CLOUD_VIRTUALISIERUNG(5, "Cloud & Virtualisierung");
 
     private final int CATEGORY_ID;
     private final String CATEGORY_NAME;
@@ -33,14 +33,5 @@ public enum Category {
             }
         }
         return null;
-    }
-
-
-    @Override
-    public String toString() {
-        return "Category{ " +
-                "Category_id= " + CATEGORY_ID +
-                ", Category name= '" + CATEGORY_NAME + '\'';
-
     }
 }
