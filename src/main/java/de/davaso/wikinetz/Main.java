@@ -231,7 +231,7 @@ public class Main {
             System.out.println("Inhalt:  " + a.getContent());
             System.out.println("Kategorie: " + (a.getCategory() != null ? a.getCategory().getCATEGORY_NAME() : "-"));
             System.out.println("Erstellt:  " + a.getCreated_at());
-            System.out.println("Geändert:  " + a.getUpdated_at());
+            //System.out.println("Geändert:  " + a.getUpdated_at());
             System.out.println("-----");
 
             // 08.09.25

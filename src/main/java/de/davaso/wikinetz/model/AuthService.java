@@ -82,7 +82,7 @@ public class AuthService {
         return false;
     }
 
-    // (Optional) Erzwingt eine Rolle; wirft eine RuntimeException, wenn nicht erfüllt
+    // Erzwingt eine Rolle; wirft eine RuntimeException, wenn nicht erfüllt
     public void requireRole(Role... roles) {
         if (!hasAnyRole(roles)) {
             throw new RuntimeException("Zugriff verweigert: fehlende Berechtigung.");

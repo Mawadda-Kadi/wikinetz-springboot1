@@ -46,6 +46,7 @@ public class Article {
         return updated_at;
     }
 
+
     //Setters
     public void setTitle(String title) {
         this.title = title;

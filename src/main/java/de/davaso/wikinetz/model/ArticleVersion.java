@@ -9,14 +9,15 @@ public class ArticleVersion {
     private final int articleId;
     private final String content;
     private final int editorId;
-    private final LocalDateTime timestamp;
+    //private final LocalDateTime timestamp;
+    private java.time.LocalDateTime updated_at;
 
     public ArticleVersion(int articleId, String content, int editorId) {
         this.versionId = counter++;
         this.articleId = articleId;
         this.content = content;
         this.editorId = editorId;
-        this.timestamp = LocalDateTime.now();
+        this.updated_at = java.time.LocalDateTime.now();
     }
 
     public int getVersionId() {
@@ -35,14 +36,19 @@ public class ArticleVersion {
         return editorId;
     }
 
-    public LocalDateTime getTimestamp() {
-        return timestamp;
+    public LocalDateTime getUpdated_at() {
+        return updated_at;
+    }
+
+    // touch() refreshes the “last modified” timestamp.
+    public void touch() {
+        this.updated_at = java.time.LocalDateTime.now();
     }
 
     @Override
     public String toString() {
         return "Version " + versionId + " | Artikel-ID: " + articleId +
-                " | Bearbeiter-ID: " + editorId + " | Datum: " + timestamp +
+                " | Bearbeiter-ID: " + editorId + " | Datum: " + updated_at +
                 "\nInhalt: " + content;
     }
 }

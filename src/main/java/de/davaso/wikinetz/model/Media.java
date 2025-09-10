@@ -1,10 +1,10 @@
 package de.davaso.wikinetz.model;
-
+//Die Klasse Media ist ein Datenmodell für ein Medienobjekt (z.B. Bild, Video, Link), das zu einem Artikel gehört.
 public class Media {
     private int mediaId;
     private int articleId;
     private String filename;
-    private String filepath;
+    private String filepath;   //Speicherort oder URL
     private MediaType type;
 
     public Media(int mediaId, int articleId, String filename, String filepath, MediaType type) {
@@ -56,7 +56,7 @@ public class Media {
     }
 
     @Override
-    public String toString() {
+    public String toString() { // Gibt eine lesbare Darstellung des Objekts zurück (z.B. für Debugging)
         return "Media{" +
                 "mediaId=" + mediaId +
                 ", articleId=" + articleId +
