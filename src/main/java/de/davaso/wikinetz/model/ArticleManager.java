@@ -37,5 +37,21 @@ public class ArticleManager {
 
     public boolean deleteArticleById(int id) {
         return articles.remove(id) != null;
+
+    }
+  //editArticle
+    public Article getArticleById(int articleId)
+    {
+        for (Article a : articles.values())
+        {
+            if (a.getArticleId() == articleId)
+            {
+                return a;
+
+            }
+
+        }
+        return null;
     }
 }
+
