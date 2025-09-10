@@ -56,7 +56,7 @@ public class AuthService {
             return false; // Konto deaktiviert
         }
 
-        // Wichtig: BCrypt-Prüfung gegen den gespeicherten Hash
+        // BCrypt-Prüfung gegen den gespeicherten Hash
         boolean ok = PasswordUtil.matches(rawPassword, user.getPasswordHash());
         if (!ok) {
             return false; // Passwort falsch

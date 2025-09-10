@@ -20,6 +20,7 @@ public class ArticleVersion {
         this.updated_at = java.time.LocalDateTime.now();
     }
 
+    // Getters
     public int getVersionId() {
         return versionId;
     }

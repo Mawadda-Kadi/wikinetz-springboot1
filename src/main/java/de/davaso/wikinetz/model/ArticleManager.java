@@ -37,8 +37,8 @@ public class ArticleManager {
 
     public boolean deleteArticleById(int id) {
         return articles.remove(id) != null;
-
     }
+
   //editArticle
     public Article getArticleById(int articleId)
     {

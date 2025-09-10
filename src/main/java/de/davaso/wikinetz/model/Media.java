@@ -15,6 +15,7 @@ public class Media {
         this.type = type;
     }
 
+    // Getters
     public int getMediaId() {
         return mediaId;
     }
@@ -35,6 +36,7 @@ public class Media {
         return type;
     }
 
+    // Setters
     public void setMediaId(int mediaId) {
         this.mediaId = mediaId;
     }
