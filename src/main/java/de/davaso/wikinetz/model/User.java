@@ -3,15 +3,15 @@ package de.davaso.wikinetz.model;
 import java.util.Objects;
 
 public class User {
-    private final int USER_ID;
+    private final int userId;
     private String username;
     private String passwordHash;
     private String email;
     private Role role;
     private boolean enabled = true;
 
-    public User(int USER_ID, String username, String passwordHash, String email, Role role) {
-        this.USER_ID = USER_ID;
+    public User(int userId, String username, String passwordHash, String email, Role role) {
+        this.userId = userId;
         this.username = username;
         this.passwordHash = passwordHash;
         this.email = email;
@@ -20,8 +20,8 @@ public class User {
 
     // Getters
 
-    public int getUSER_ID() {
-        return USER_ID;
+    public int getUserId() {
+        return userId;
     }
 
     public String getUsername() {
@@ -62,7 +62,7 @@ public class User {
     @Override
     public String toString() {
         return "User{" +
-                "USER_ID= " + USER_ID +
+                "userId= " + userId +
                 ", username= '" + username + '\'' +
                 ", email= '" + email + '\'' +
                 ", role= " + role +
@@ -76,12 +76,13 @@ public class User {
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
-        if (!(o instanceof User user)) return false;
-        return USER_ID == user.USER_ID;
+        if (o == null || getClass() != o.getClass()) return false;
+        User user = (User) o;
+        return userId == user.userId;
     }
 
     @Override
     public int hashCode() {
-        return Objects.hashCode(USER_ID);
+        return Integer.hashCode(userId);
     }
 }

@@ -8,7 +8,7 @@ public class VersionManager {
     private final List<ArticleVersion> versions = new ArrayList<>();
 
     public void saveVersion(int articleId, String content, int editorId) {
-        versions.add(new ArticleVersion(articleId, content, editorId));
+        versions.add(new Version(articleId, content, editorId));
     }
 
     public List<ArticleVersion> getVersionsForArticle(int articleId) {

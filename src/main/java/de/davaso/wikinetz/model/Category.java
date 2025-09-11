@@ -8,22 +8,22 @@ public enum Category {
     WARTUNG_INSTALLATION(4, "Wartung & Installation"),
     CLOUD_VIRTUALISIERUNG(5, "Cloud & Virtualisierung");
 
-    private final int CATEGORY_ID;
-    private final String CATEGORY_NAME;
+    private final int categoryId;
+    private final String categoryName;
 
 
 
-    Category(int CATEGORY_ID, String CATEGORY_NAME) {
-        this.CATEGORY_ID = CATEGORY_ID;
-        this.CATEGORY_NAME = CATEGORY_NAME;
+    Category(int categoryId, String categoryName) {
+        this.categoryId = categoryId;
+        this.categoryName = categoryName;
     }
 
-    public int getCATEGORY_ID() {
-        return CATEGORY_ID;
+    public int getCategoryId() {
+        return categoryId;
     }
 
-    public String getCATEGORY_NAME() {
-        return CATEGORY_NAME;
+    public String getCategoryName() {
+        return categoryName;
     }
 
     public static Category getCategoryById(int id){

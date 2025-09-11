@@ -3,27 +3,27 @@ package de.davaso.wikinetz.model;
 import java.time.LocalDateTime;
 
 public class Article {
-    private final int ARTICLE_ID;
+    private final int articleId;
     private String title;
     private String content;
     private Category category;
-    private java.time.LocalDateTime created_at;
-    private java.time.LocalDateTime updated_at;
+    private java.time.LocalDateTime createdAt;
+    private java.time.LocalDateTime updatedAt;
 
     // Article Constructor
-    public Article(int article_id, String title, String content, Category category) {
+    public Article(int articleId, String title, String content, Category category) {
 
-        this.ARTICLE_ID = article_id;
+        this.articleId = articleId;
         this.title = title;
         this.content = content;
         this.category = category;
-        this.created_at = java.time.LocalDateTime.now();
-        this.updated_at = this.created_at;
+        this.createdAt = java.time.LocalDateTime.now();
+        this.updatedAt = this.createdAt;
     }
 
     // Getters
     public int getArticleId() {
-        return ARTICLE_ID;
+        return articleId;
     }
 
     public String getTitle() {
@@ -38,12 +38,12 @@ public class Article {
         return category;
     }
 
-    public LocalDateTime getCreated_at() {
-        return created_at;
+    public LocalDateTime getCreatedAt() {
+        return createdAt;
     }
 
-    public LocalDateTime getUpdated_at() {
-        return updated_at;
+    public LocalDateTime getUpdatedAt() {
+        return updatedAt;
     }
 
 
@@ -63,18 +63,36 @@ public class Article {
         touch();
     }
 
+    private void addVersionSnapshot(String note) {
+        addVersionSnapshot(note, null);
+
+    }
+
+    private void addVersionSnapshot(String note, User editor) {
+        int nextNo = version.size() + 1;
+        versions.add(new Version(
+                nextNo,
+                this.title,
+                this.content,
+                this.category,
+                java.time.LocalDateTime.now(),
+                note,
+                editor != null ? editor.getUserId() : null,
+                editor !=null ? editor.getUsername() : "SYSTEM"
+        ));
+    }
+
     // touch() refreshes the “last modified” timestamp.
     private void touch() {
-        this.updated_at = java.time.LocalDateTime.now();
+        this.updatedAt = java.time.LocalDateTime.now();
     }
 
     // toString() runs whenever Java needs a string for my object
     // I don’t have to call it by name most of the time. it’s used implicitly
-
     @Override
     public String toString() {
         return "Article{" +
-                "id= " +ARTICLE_ID +
+                "id= " +articleId +
                 ", title='" + title + '\'' +
                 ", content='" + content + '\'' +
                 ", category=" + category +

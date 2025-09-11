@@ -20,7 +20,7 @@ public class UserStore {
         }
         // neuen Admin erzeugen
         User admin = new User(nextUserId++, username, PasswordUtil.hash(password), email, Role.ADMIN);
-        users.put(admin.getUSER_ID(), admin);
+        users.put(admin.getUserId(), admin);
         return admin;
     }
 
@@ -45,7 +45,7 @@ public class UserStore {
             throw new IllegalArgumentException("Benutzername ist bereits vergeben.");
         }
         User u = new User(nextUserId++, username, PasswordUtil.hash(rawPassword), email, role);
-        users.put(u.getUSER_ID(), u);
+        users.put(u.getUserId(), u);
         return u;
     }
 
