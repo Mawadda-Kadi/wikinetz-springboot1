@@ -1,4 +1,8 @@
-package de.davaso.wikinetz.model;
+package de.davaso.wikinetz.manager;
+
+import de.davaso.wikinetz.service.PasswordUtil;
+import de.davaso.wikinetz.model.Role;
+import de.davaso.wikinetz.model.User;
 
 import java.util.*;
 

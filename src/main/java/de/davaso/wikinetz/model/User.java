@@ -1,6 +1,6 @@
 package de.davaso.wikinetz.model;
 
-import java.util.Objects;
+import de.davaso.wikinetz.service.PasswordUtil;
 
 public class User {
     private final int userId;

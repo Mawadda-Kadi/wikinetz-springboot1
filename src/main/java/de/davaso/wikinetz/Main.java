@@ -1,6 +1,11 @@
 package de.davaso.wikinetz;
 
+import de.davaso.wikinetz.manager.ArticleManager;
+import de.davaso.wikinetz.manager.MediaManager;
+import de.davaso.wikinetz.manager.UserStore;
+import de.davaso.wikinetz.manager.VersionManager;
 import de.davaso.wikinetz.model.*;
+import de.davaso.wikinetz.service.AuthService;
 
 import java.util.Comparator;
 import java.util.List;

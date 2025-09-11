@@ -1,4 +1,4 @@
-package de.davaso.wikinetz.model;
+package de.davaso.wikinetz.service;
 
 import org.mindrot.jbcrypt.BCrypt;
 

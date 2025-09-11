@@ -1,4 +1,8 @@
-package de.davaso.wikinetz.model;
+package de.davaso.wikinetz.service;
+
+import de.davaso.wikinetz.model.Role;
+import de.davaso.wikinetz.model.User;
+import de.davaso.wikinetz.manager.UserStore;
 
 import java.util.Optional;
 
@@ -89,3 +93,4 @@ public class AuthService {
         }
     }
 }
+

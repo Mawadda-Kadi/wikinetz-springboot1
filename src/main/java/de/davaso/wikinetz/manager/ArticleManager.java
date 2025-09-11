@@ -1,5 +1,8 @@
-package de.davaso.wikinetz.model;
+package de.davaso.wikinetz.manager;
 
+
+import de.davaso.wikinetz.model.Article;
+import de.davaso.wikinetz.model.Category;
 
 import java.util.*;
 

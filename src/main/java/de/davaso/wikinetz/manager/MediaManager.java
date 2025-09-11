@@ -1,4 +1,7 @@
-package de.davaso.wikinetz.model;
+package de.davaso.wikinetz.manager;
+
+import de.davaso.wikinetz.model.Media;
+import de.davaso.wikinetz.model.MediaType;
 
 import java.util.ArrayList;
 import java.util.List;

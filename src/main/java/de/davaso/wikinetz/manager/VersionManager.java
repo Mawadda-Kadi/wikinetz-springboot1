@@ -1,4 +1,8 @@
-package de.davaso.wikinetz.model;
+package de.davaso.wikinetz.manager;
+
+import de.davaso.wikinetz.model.Article;
+import de.davaso.wikinetz.model.User;
+import de.davaso.wikinetz.model.Version;
 
 import java.time.LocalDateTime;
 import java.util.*;
