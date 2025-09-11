@@ -1,57 +1,67 @@
 package de.davaso.wikinetz.model;
-
 import java.time.LocalDateTime;
+import java.util.Objects;
 
 public class Version {
     private final int versionNumber;
+    private final int articleId;
+    private final  long globalSeq;
     private final String title;
     private final String content;
     private final Category category;
     private final String note;
     private final Integer editorId;
     private final String editorUsername;
-    private java.time.LocalDateTime createdAt;
+    private LocalDateTime createdAt;
 
-    public Version(int versionNumber, String title, String content, Category category, String note, Integer editorId, String editorUsername, java.time.LocalDateTime createdAt) {
+    public Version(
+            int versionNumber,
+            int articleId,
+            long globalSeq,
+            String title,
+            String content,
+            Category category,
+            String note,
+            Integer editorId,
+            String editorUsername,
+            LocalDateTime createdAt
+    ) {
         this.versionNumber = versionNumber;
+        this.articleId = articleId;
+        this.globalSeq = globalSeq;
         this.title = title;
         this.content = content;
         this.category = category;
         this.note = note;
         this.editorId = editorId;
         this.editorUsername = editorUsername;
-        this.createdAt = java.time.LocalDateTime.now();
+        this.createdAt = createdAt;
     }
 
     // Getters
     public int getVersionNumber() {
         return versionNumber;
     }
-
+    public int getArticleId() { return articleId; }
     public String getTitle() {
         return title;
     }
-
+    public long getGlobalSeq() { return globalSeq; }
     public String getContent() {
         return content;
     }
-
     public Category getCategory() {
         return category;
     }
-
     public String getNote() {
         return note;
     }
-
     public Integer getEditorId() {
         return editorId;
     }
-
     public String getEditorUsername() {
         return editorUsername;
     }
-
     public java.time.LocalDateTime getCreatedAt() {
         return createdAt;
     }
@@ -70,14 +80,14 @@ public class Version {
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
-        if (!(o instanceof Version v)) return false;
-        return versionNumber == v.versionNumber
-                && articleId == v.articleId;
+        if (o == null || getClass() != o.getClass()) return false;
+        Version v = (Version) o;
+        return versionNumber == v.versionNumber && articleId == v.articleId;
     }
 
     @Override
     public int hashCode() {
-        return java.util.Objects.hash(articleId, versionNumber);
+        return Objects.hash(articleId, versionNumber);
     }
 }
 

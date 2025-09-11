@@ -55,16 +55,16 @@ public class UserStore {
     }
 
     // Löscht einen Benutzer anhand des Benutzernamens
-    //public void deleteByUsername(String username) {
-    //  Integer idToRemove = null;
-    //    for (User u : users.values()) {
-    //       if (u.getUsername().equals(username)) {
-    //            idToRemove = u.getUSER_ID();
-    //            break;
-    //        }
-    //    }
-    //    if (idToRemove != null) {
-    //        users.remove(idToRemove);
-    //    }
-    //}
+    public void deleteByUsername(String username) {
+        Integer idToRemove = null;
+        for (User u : users.values()) {
+           if (u.getUsername().equals(username)) {
+                idToRemove = u.getUserId();
+                break;
+            }
+        }
+        if (idToRemove != null) {
+            users.remove(idToRemove);
+        }
+    }
 }

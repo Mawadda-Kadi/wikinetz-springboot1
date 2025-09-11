@@ -4,16 +4,19 @@ import de.davaso.wikinetz.model.*;
 
 import java.util.Comparator;
 import java.util.List;
+import java.util.Optional;
 import java.util.Scanner;
 
 //TIP To <b>Run</b> code, press <shortcut actionId="Run"/> or
 // click the <icon src="AllIcons.Actions.Execute"/> icon in the gutter.
 public class Main {
+    // ---- Scanner ----
     private static final Scanner scanner = new Scanner(System.in);
-    private static final ArticleManager manager = new ArticleManager();
-    private static final MediaManager mediaManager = new MediaManager();//08.09.25
-    private static final VersionManager versionManager = new VersionManager();  //09.09.25
 
+    // ---- Managers ----
+    private static final ArticleManager manager = new ArticleManager();
+    private static final MediaManager mediaManager = new MediaManager();
+    private static final VersionManager versionManager = new VersionManager();
 
     // ---- AUTH ----
     private static final UserStore userStore = new UserStore();
@@ -38,10 +41,10 @@ public class Main {
                 case "4" -> deleteArticleById();
                 case "5" -> login();
                 case "6" -> logout();
-                case "7" -> showMediaForArticle();//08.09.25
+                case "7" -> showMediaForArticle();
                 case "8" -> deleteMediaById();
                 case "9" -> editArticle();
-                case "10" -> showArticleVersions();//09.09.25
+                case "10" -> showArticleVersions();
                 case "0" -> {
                     running = false;
                     System.out.println("Bye");
@@ -67,12 +70,11 @@ public class Main {
 
         // ---- AUTH ----
         System.out.print("Status: ");
-        if (auth.isLoggedIn()) {
-            var u = auth.getCurrentUser().get();
-            System.out.println(u.getUsername() + " (" + u.getRole() + ") ist eingeloggt.");
-        } else {
-            System.out.println("Niemand eingeloggt.");
-        }
+        auth.getCurrentUser().ifPresentOrElse(
+                u -> System.out.println(u.getUsername() + " (" + u.getRole() + ") ist eingeloggt."),
+                () -> System.out.println("Niemand eingeloggt.")
+        );
+
         // -------------------------
 
         System.out.print("Deine Wahl: ");
@@ -96,16 +98,11 @@ public class Main {
         }
 
         Article a = manager.addArticle(title, content, category);
+        // Erstversion anlegen
+        versionManager.ensureInitial(a);
         System.out.println("Hinzugefügt: " + a);
-
-
-        // Medien hinzufügen 08.09.25
+        // Medien hinzufügen
         addMediaToArticle(a.getArticleId());
-
-        // 09.09.25
-        int editorId = auth.getCurrentUser().map(User::getUSER_ID).orElse(-1);
-        versionManager.saveVersion(a.getArticleId(), content, editorId);
-
     }
 
     private static void addMediaToArticle(int articleId) {
@@ -119,19 +116,28 @@ public class Main {
             System.out.print("Dateipfad: ");
             String filepath = scanner.nextLine();
 
+            // --- Switch-Case MediaType Auswahl ---
             System.out.println("Medientyp auswählen:");
-            for (MediaType mt : MediaType.values()) {
-                System.out.println("- " + mt.name());
-            }
-            System.out.print("Typ: ");
-            String typeStr = scanner.nextLine().trim().toUpperCase();
+            System.out.println("1) IMAGE");
+            System.out.println("2) VIDEO");
+            System.out.println("3) LINK");
+            System.out.print("Deine Wahl: ");
+            String typeChoice = scanner.nextLine().trim();
 
-            try {
-                MediaType type = MediaType.valueOf(typeStr);
+            MediaType type;
+            switch (typeChoice) {
+                case "1" -> type = MediaType.IMAGE;
+                case "2" -> type = MediaType.VIDEO;
+                case "3" -> type = MediaType.LINK;
+                default -> {
+                    System.out.println("Ungültige Auswahl. Abbruch dieses Mediums.");
+                    type = null;
+                }
+            }
+
+            if (type != null) {
                 Media media = mediaManager.addMedia(articleId, filename, filepath, type);
                 System.out.println("Medien hinzugefügt: " + media);
-            } catch (IllegalArgumentException e) {
-                System.out.println("Ungültiger Medientyp.");
             }
 
             System.out.println("Noch ein Medium hinzufügen? (j/n)");
@@ -140,7 +146,6 @@ public class Main {
         }
     }
 
-    //08.09.25
     private static void showMediaForArticle() {
         System.out.print("Artikel-ID für Medienanzeige: ");
         String idStr = scanner.nextLine().trim();
@@ -163,7 +168,7 @@ public class Main {
             System.out.println("Bitte eine gültige Zahl eingeben.");
         }
     }
-    //08.09.25
+
     private static void deleteMediaById() {
         System.out.print("Medien-ID zum Löschen: ");
         String idStr = scanner.nextLine().trim();
@@ -180,12 +185,11 @@ public class Main {
         }
     }
 
-
     private static Category askForCategory() {
         while (true) {
             System.out.println("Kategorie auswählen:");
             for (Category c : Category.values()) {
-                System.out.println(c.getCATEGORY_ID() + ") " + c.getCATEGORY_NAME());
+                System.out.println(c.getCategoryId() + ") " + c.getCategoryName());
             }
             System.out.print("Deine Wahl (oder Enter zum Abbrechen): ");
             String catStr = scanner.nextLine().trim();
@@ -229,12 +233,11 @@ public class Main {
             System.out.println("ID:      " + a.getArticleId());
             System.out.println("Title:   " + a.getTitle());
             System.out.println("Inhalt:  " + a.getContent());
-            System.out.println("Kategorie: " + (a.getCategory() != null ? a.getCategory().getCATEGORY_NAME() : "-"));
-            System.out.println("Erstellt:  " + a.getCreated_at());
-            //System.out.println("Geändert:  " + a.getUpdated_at());
+            System.out.println("Kategorie: " + (a.getCategory() != null ? a.getCategory().getCategoryName() : "-"));
+            System.out.println("Erstellt:  " + a.getCreatedAt());
+            System.out.println("Geändert:  " + a.getUpdatedAt());
             System.out.println("-----");
 
-            // 08.09.25
             List<Media> mediaList = mediaManager.getMediaByArticleId(id);
             if (mediaList.isEmpty()) {
                 System.out.println("Keine Medien zu diesem Artikel.");
@@ -271,29 +274,29 @@ public class Main {
         }
     }
 
-    //Neue Methode zum Anzeigen der Versionen: 09.09.25
+   private static void showArticleVersions() {
+       System.out.print("Artikel-ID: ");
+       String idStr = scanner.nextLine().trim();
+       try {
+           int articleId = Integer.parseInt(idStr);
+           List<Version> versions = versionManager.listVersions(articleId);
+           if (versions.isEmpty()) {
+               System.out.println("Keine Versionen gefunden.");
+           } else {
+               System.out.println("Änderungsverlauf für Artikel " + articleId + ":");
+               for (Version v : versions) {
+                   System.out.println("v" + v.getVersionNumber() + "  |  " +
+                           v.getCreatedAt() + "  |  " +
+                           (v.getEditorUsername() != null ? v.getEditorUsername() : "SYSTEM") + "  |  " +
+                           v.getNote());
+               }
+           }
+       } catch (NumberFormatException e) {
+           System.out.println("Ungültige Artikel-ID.");
+       }
+   }
 
-    private static void showArticleVersions() {
-        System.out.print("Artikel-ID: ");
-        String idStr = scanner.nextLine().trim();
-        try {
-            int articleId = Integer.parseInt(idStr);
-            List<ArticleVersion> versions = versionManager.getVersionsForArticle(articleId);
-            if (versions.isEmpty()) {
-                System.out.println("Keine Versionen gefunden.");
-            } else {
-                System.out.println("Änderungsverlauf für Artikel " + articleId + ":");
-                for (ArticleVersion v : versions) {
-                    System.out.println(v);
-                    System.out.println("-----");
-                }
-            }
-        } catch (NumberFormatException e) {
-            System.out.println("Ungültige Artikel-ID.");
-        }
-    }
-
-     //Methode editArticle() 09.09.25
+    // ---- Bearbeiten & Snapshot ----
     private static void editArticle() {
         if (!auth.hasAnyRole(Role.ADMIN, Role.BENUTZER)) {
             System.out.println("Zugriff verweigert. Bitte einloggen mit Rolle ADMIN oder BENUTZER.");
@@ -324,9 +327,23 @@ public class Main {
                 article.setContent(newContent);
             }
 
-            // Version speichern
-            int editorId = auth.getCurrentUser().map(User::getUSER_ID).orElse(-1);
-            versionManager.saveVersion(article.getArticleId(), article.getContent(), editorId);
+            // Optional: Kategorie ändern
+            System.out.print("Kategorie ändern? (j/n): ");
+            String changeCat = scanner.nextLine().trim().toLowerCase();
+            if (changeCat.equals("j")) {
+                Category newCategory = askForCategory();
+                if (newCategory != null) {
+                    article.setCategory(newCategory);
+                }
+            }
+
+            // Version speichern (Snapshot)
+            Optional<User> editor = auth.getCurrentUser();
+            versionManager.snapshot(
+                    article,
+                    editor.orElse(null),
+                    "Bearbeitung"
+            );
 
             System.out.println("Artikel wurde aktualisiert und Version gespeichert.");
 

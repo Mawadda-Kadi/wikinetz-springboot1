@@ -28,7 +28,7 @@ public enum Category {
 
     public static Category getCategoryById(int id){
         for (Category c : values()) {
-            if (c.CATEGORY_ID == id) {
+            if (c.categoryId == id) {
                 return c;
             }
         }
