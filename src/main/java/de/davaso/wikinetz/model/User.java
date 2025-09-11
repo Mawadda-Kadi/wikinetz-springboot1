@@ -80,7 +80,7 @@ public class User {
         User user = (User) o;
         return userId == user.userId;
     }
-
+    // hashCode() ist eine Methode aus der Klasse Object, die jeder Java-Klasse automatisch erbt.
     @Override
     public int hashCode() {
         return Integer.hashCode(userId);
