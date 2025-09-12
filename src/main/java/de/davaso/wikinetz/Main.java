@@ -12,8 +12,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Scanner;
 
-//TIP To <b>Run</b> code, press <shortcut actionId="Run"/> or
-// click the <icon src="AllIcons.Actions.Execute"/> icon in the gutter.
+
 public class Main {
     // ---- Scanner ----
     private static final Scanner scanner = new Scanner(System.in);
@@ -50,9 +49,13 @@ public class Main {
                 case "8" -> deleteMediaById();
                 case "9" -> editArticle();
                 case "10" -> showArticleVersions();
+                case "11" -> searchArticles();
+                case "12" -> registerUser();
+                case "13" -> listUsers();
+                case "14" -> manageUsers();
                 case "0" -> {
                     running = false;
-                    System.out.println("Bye");
+                    System.out.println("Programm beendet.");
                 }
                 default -> System.out.println("Ungültige Option. Bitte erneut versuchen.");
             }
@@ -61,30 +64,31 @@ public class Main {
 
     private static void printArticlesMenu() {
         System.out.println("\nMenu:");
-        System.out.println("1) Artikel hinzufügen");
-        System.out.println("2) Artikel auflisten");
-        System.out.println("3) Artikeldetails anzeigen (per ID)");
-        System.out.println("4) Artikel löschen (per ID)");
-        System.out.println("5) Login");
-        System.out.println("6) Logout");
-        System.out.println("7) Medien anzeigen (per Artikel-ID)");//08.09.25
-        System.out.println("8) Medien löschen (per Medien-ID)");
-        System.out.println("9) Artikel bearbeiten");
+        System.out.println("1)  Artikel hinzufügen [ADMIN/BENUTZER]");
+        System.out.println("2)  Artikel auflisten");
+        System.out.println("3)  Artikeldetails anzeigen (per ID)");
+        System.out.println("4)  Artikel löschen (per ID) [ADMIN]");
+        System.out.println("5)  Login");
+        System.out.println("6)  Logout");
+        System.out.println("7)  Medien anzeigen (per Artikel-ID)");
+        System.out.println("8)  Medien löschen (per Medien-ID) [ADMIN/BENUTZER]");
+        System.out.println("9)  Artikel bearbeiten [ADMIN/BENUTZER]");
         System.out.println("10) Änderungsverlauf anzeigen (per Artikel-ID)");
-        System.out.println("0) Beenden");
-
+        System.out.println("11) Artikel suchen (Titel/Inhalt/Kategorie)");
+        System.out.println("12) Benutzer registrieren");
+        System.out.println("13) Benutzer auflisten [ADMIN]");
+        System.out.println("14) Benutzer verwalten [ADMIN]");
+        System.out.println("0)  Beenden");
         // ---- AUTH ----
         System.out.print("Status: ");
         auth.getCurrentUser().ifPresentOrElse(
                 u -> System.out.println(u.getUsername() + " (" + u.getRole() + ") ist eingeloggt."),
                 () -> System.out.println("Niemand eingeloggt.")
         );
-
-        // -------------------------
-
         System.out.print("Deine Wahl: ");
     }
 
+    // ---------- ARTIKEL CRUD & MEDIEN ----------
     private static void addArticle() {
         // ---- AUTH: Erlaubt USER/ADMIN das Hinzufügen; VIEWER darf es nicht ----
         if (!auth.hasAnyRole(Role.ADMIN, Role.BENUTZER)) {
@@ -175,6 +179,11 @@ public class Main {
     }
 
     private static void deleteMediaById() {
+        // VIEWER darf NICHT löschen
+        if (!auth.hasAnyRole(Role.ADMIN, Role.BENUTZER)) {
+            System.out.println("Zugriff verweigert. Nur ADMIN oder BENUTZER.");
+            return;
+        }
         System.out.print("Medien-ID zum Löschen: ");
         String idStr = scanner.nextLine().trim();
         try {
@@ -264,6 +273,11 @@ public class Main {
     }
 
     private static void deleteArticleById() {
+        // Nur ADMIN darf Artikel löschen
+        if (!auth.hasAnyRole(Role.ADMIN)) {
+            System.out.println("Zugriff verweigert. Nur ADMIN darf Artikel löschen.");
+            return;
+        }
         System.out.print("Artikel-ID zum Löschen eingeben: ");
         String idStr = scanner.nextLine().trim();
         try {
@@ -303,6 +317,7 @@ public class Main {
 
     // ---- Bearbeiten & Snapshot ----
     private static void editArticle() {
+        // VIEWER darf NICHT bearbeiten
         if (!auth.hasAnyRole(Role.ADMIN, Role.BENUTZER)) {
             System.out.println("Zugriff verweigert. Bitte einloggen mit Rolle ADMIN oder BENUTZER.");
             return;
@@ -332,7 +347,7 @@ public class Main {
                 article.setContent(newContent);
             }
 
-            // Optional: Kategorie ändern
+            // Kategorie ändern
             System.out.print("Kategorie ändern? (j/n): ");
             String changeCat = scanner.nextLine().trim().toLowerCase();
             if (changeCat.equals("j")) {
@@ -357,6 +372,258 @@ public class Main {
         }
     }
 
+
+    // ---------- SEARCH ----------
+    private static void searchArticles() {
+        System.out.print("Suchbegriff (Titel/Inhalt; leer = abbrechen): ");
+        String q = scanner.nextLine().trim();
+        if (q.isEmpty()) return;
+
+        System.out.print("Nach Kategorie filtern? (j/n): ");
+        String byCat = scanner.nextLine().trim().toLowerCase();
+
+        // Nur EINMAL zuweisen -> effektiv final
+        final Category filterCat = byCat.equals("j") ? askForCategory() : null;
+
+        String qLower = q.toLowerCase();
+        List<Article> all = manager.getAllArticles();
+        all.stream()
+                .filter(a ->
+                        (a.getTitle() != null && a.getTitle().toLowerCase().contains(qLower)) ||
+                                (a.getContent() != null && a.getContent().toLowerCase().contains(qLower))
+                )
+                .filter(a -> filterCat == null || a.getCategory() == filterCat) // ok, Category ist Enum, '==' passt
+                .sorted(Comparator.comparingInt(Article::getArticleId))
+                .forEach(a -> System.out.println(a.getArticleId() + " - " + a.getTitle() +
+                        " [" + (a.getCategory() != null ? a.getCategory().getCategoryName() : "-") + "]"));
+    }
+
+    // ================== BENUTZER-VERWALTUNG (ADMIN) ==================
+    private static void manageUsers() {
+        if (!auth.hasAnyRole(Role.ADMIN)) {
+            System.out.println("Zugriff verweigert. Nur ADMIN.");
+            return;
+        }
+
+        boolean back = false;
+        while (!back) {
+            System.out.println("\n=== Benutzerverwaltung (ADMIN) ===");
+            System.out.println("1) Benutzer auflisten");
+            System.out.println("2) Rolle ändern");
+            System.out.println("3) Benutzer aktivieren/deaktivieren");
+            System.out.println("4) Passwort zurücksetzen");
+            System.out.println("5) Benutzer löschen");
+            System.out.println("0) Zurück");
+            System.out.print("Deine Wahl: ");
+            String choice = scanner.nextLine().trim();
+
+            switch (choice) {
+                case "1" -> listUsers();
+                case "2" -> changeUserRole();
+                case "3" -> toggleUserEnabled();
+                case "4" -> resetUserPassword();
+                case "5" -> deleteUser();
+                case "0" -> back = true;
+                default  -> System.out.println("Ungültige Option.");
+            }
+        }
+    }
+
+    private static void changeUserRole() {
+        System.out.print("Username für Rollenänderung: ");
+        String username = scanner.nextLine().trim();
+
+        Optional<User> userOpt = userStore.findByUsername(username);
+        if (userOpt.isEmpty()) {
+            System.out.println("Benutzer nicht gefunden.");
+            return;
+        }
+        User target = userOpt.get();
+
+        // Rolle wählen
+        Role newRole = promptRole("Neue Rolle wählen");
+        if (newRole == null) {
+            System.out.println("Abgebrochen.");
+            return;
+        }
+
+        // Schutz: letzten aktiven Admin nicht entmachten
+        if (target.getRole() == Role.ADMIN && newRole != Role.ADMIN && countEnabledAdmins() <= 1) {
+            System.out.println("Abbruch: Das ist der letzte aktive ADMIN. Mindestens ein ADMIN muss erhalten bleiben.");
+            return;
+        }
+
+        target.setRole(newRole);
+        System.out.println("Rolle geändert: " + target.getUsername() + " -> " + target.getRole());
+    }
+
+    private static void toggleUserEnabled() {
+        System.out.print("Username aktivieren/deaktivieren: ");
+        String username = scanner.nextLine().trim();
+
+        Optional<User> userOpt = userStore.findByUsername(username);
+        if (userOpt.isEmpty()) {
+            System.out.println("Benutzer nicht gefunden.");
+            return;
+        }
+        User target = userOpt.get();
+
+        System.out.println("Aktueller Status von " + target.getUsername() + ": enabled=" + target.isEnabled());
+        System.out.print("Neuer Status? (e = enable, d = disable, Enter = abbrechen): ");
+        String cmd = scanner.nextLine().trim().toLowerCase();
+
+        if (cmd.isEmpty()) return;
+
+        boolean enable;
+        if (cmd.equals("e")) {
+            enable = true;
+        } else if (cmd.equals("d")) {
+            // Schutz: letzten aktiven Admin nicht deaktivieren
+            if (target.getRole() == Role.ADMIN && target.isEnabled() && countEnabledAdmins() <= 1) {
+                System.out.println("Abbruch: Das ist der letzte aktive ADMIN. Mindestens ein ADMIN muss aktiv bleiben.");
+                return;
+            }
+            enable = false;
+        } else {
+            System.out.println("Ungültige Eingabe.");
+            return;
+        }
+
+        target.setEnabled(enable);
+        System.out.println("Status aktualisiert: " + target.getUsername() + " -> enabled=" + target.isEnabled());
+    }
+
+    private static void resetUserPassword() {
+        System.out.print("Username für Passwort-Reset: ");
+        String username = scanner.nextLine().trim();
+
+        Optional<User> userOpt = userStore.findByUsername(username);
+        if (userOpt.isEmpty()) {
+            System.out.println("Benutzer nicht gefunden.");
+            return;
+        }
+        User target = userOpt.get();
+
+        System.out.print("Neues Passwort: ");
+        String pw1 = scanner.nextLine();
+        System.out.print("Neues Passwort wiederholen: ");
+        String pw2 = scanner.nextLine();
+
+        if (!pw1.equals(pw2)) {
+            System.out.println("Passwörter stimmen nicht überein.");
+            return;
+        }
+        if (pw1.isBlank()) {
+            System.out.println("Passwort darf nicht leer sein.");
+            return;
+        }
+
+        target.setPassword(pw1); // User kümmert sich um Hashing via PasswordUtil
+        System.out.println("Passwort aktualisiert für " + target.getUsername() + ".");
+    }
+
+    private static void deleteUser() {
+        System.out.print("Username zum Löschen: ");
+        String username = scanner.nextLine().trim();
+
+        Optional<User> userOpt = userStore.findByUsername(username);
+        if (userOpt.isEmpty()) {
+            System.out.println("Benutzer nicht gefunden.");
+            return;
+        }
+        User target = userOpt.get();
+
+        // Schutz: nicht sich selbst löschen
+        if (auth.getCurrentUser().map(User::getUsername).filter(username::equals).isPresent()) {
+            System.out.println("Du kannst dich nicht selbst löschen.");
+            return;
+        }
+
+        // Optionaler Schutz: Standard-Admin nicht löschen
+        if (username.equalsIgnoreCase("admin")) {
+            System.out.println("Schutz: Standard-Admin nicht löschen.");
+            return;
+        }
+
+        // Schutz: letzten aktiven Admin nicht löschen
+        if (target.getRole() == Role.ADMIN && target.isEnabled() && countEnabledAdmins() <= 1) {
+            System.out.println("Abbruch: Das ist der letzte aktive ADMIN. Mindestens ein ADMIN muss aktiv bleiben.");
+            return;
+        }
+
+        userStore.deleteByUsername(username);
+        System.out.println("Benutzer (falls vorhanden) gelöscht: " + username);
+    }
+
+    private static Role promptRole(String title) {
+        System.out.println(title + ":");
+        System.out.println("1) ADMIN");
+        System.out.println("2) BENUTZER");
+        System.out.println("3) VIEWER");
+        System.out.print("Deine Wahl: ");
+        String r = scanner.nextLine().trim();
+        return switch (r) {
+            case "1" -> Role.ADMIN;
+            case "2" -> Role.BENUTZER;
+            case "3" -> Role.VIEWER;
+            default  -> {
+                System.out.println("Ungültig. Abbruch.");
+                yield null;
+            }
+        };
+    }
+
+    private static int countEnabledAdmins() {
+        int count = 0;
+        for (User u : userStore.listAll()) {
+            if (u.getRole() == Role.ADMIN && u.isEnabled()) {
+                count++;
+            }
+        }
+        return count;
+    }
+
+    // ---------- USERS (Register & List) ----------
+    private static void registerUser() {
+        System.out.println("=== Benutzer registrieren ===");
+        System.out.print("Benutzername: ");
+        String username = scanner.nextLine().trim();
+        System.out.print("E-Mail: ");
+        String email = scanner.nextLine().trim();
+        System.out.print("Passwort: ");
+        String password = scanner.nextLine();
+
+        Role role;
+
+        if (auth.hasAnyRole(Role.ADMIN)) {
+            role = promptRole("=== Rolle wählen ===");
+            if (role == null) {
+                System.out.println("Abgebrochen.");
+                return;
+            }
+        } else {
+            role = Role.VIEWER;
+            System.out.println("Hinweis: Ohne ADMIN-Rechte wird als VIEWER registriert.");
+        }
+
+        try {
+            User u = userStore.register(username, password, email, role);
+            System.out.println("Registriert: " + u.getUsername() + " (" + u.getRole() + ")");
+        } catch (IllegalArgumentException ex) {
+            System.out.println("Fehler: " + ex.getMessage());
+        }
+    }
+
+    private static void listUsers() {
+        if (!auth.hasAnyRole(Role.ADMIN)) {
+            System.out.println("Zugriff verweigert. Nur ADMIN.");
+            return;
+        }
+        System.out.println("=== Benutzerliste ===");
+        for (User u : userStore.listAll()) {
+            System.out.println("- " + u.getUsername() + " | " + u.getEmail() + " | Rolle: " + u.getRole() + " | enabled=" + u.isEnabled());
+        }
+    }
 
     // ---- AUTH helpers ----
     private static void login() {
