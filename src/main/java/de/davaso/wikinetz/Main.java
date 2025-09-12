@@ -39,21 +39,20 @@ public class Main {
             String choice = scanner.nextLine().trim();
 
             switch (choice) {
-                case "1" -> addArticle();
-                case "2" -> listArticles();
-                case "3" -> viewArticleById();
-                case "4" -> deleteArticleById();
-                case "5" -> login();
-                case "6" -> logout();
-                case "7" -> showMediaForArticle();
-                case "8" -> deleteMediaById();
-                case "9" -> editArticle();
-                case "10" -> showArticleVersions();
-                case "11" -> searchArticles();
-                case "12" -> registerUser();
-                case "13" -> listUsers();
-                case "14" -> manageUsers();
-                case "0" -> {
+                case "1"  -> login();
+                case "2"  -> registerUser();
+                case "3"  -> addArticle();
+                case "4"  -> listArticles();
+                case "5"  -> viewArticleById();
+                case "6"  -> searchArticles();
+                case "7"  -> showMediaForArticle();
+                case "8"  -> editArticle();
+                case "9"  -> deleteMediaById();
+                case "10" -> deleteArticleById();
+                case "11" -> showArticleVersions();
+                case "12" -> manageUsers();
+                case "13" -> logout();
+                case "0"  -> {
                     running = false;
                     System.out.println("Programm beendet.");
                 }
@@ -63,21 +62,20 @@ public class Main {
     }
 
     private static void printArticlesMenu() {
-        System.out.println("\nMenu:");
-        System.out.println("1)  Artikel hinzufügen [ADMIN/BENUTZER]");
-        System.out.println("2)  Artikel auflisten");
-        System.out.println("3)  Artikeldetails anzeigen (per ID)");
-        System.out.println("4)  Artikel löschen (per ID) [ADMIN]");
-        System.out.println("5)  Login");
-        System.out.println("6)  Logout");
+        System.out.println("\n === Menu: ===");
+        System.out.println("1)  Login");
+        System.out.println("2)  Registrieren");
+        System.out.println("3)  Artikel hinzufügen [ADMIN/BENUTZER]");
+        System.out.println("4)  Artikel auflisten");
+        System.out.println("5)  Artikeldetails anzeigen (per ID)");
+        System.out.println("6)  Artikel suchen (Titel/Inhalt/Kategorie)");
         System.out.println("7)  Medien anzeigen (per Artikel-ID)");
-        System.out.println("8)  Medien löschen (per Medien-ID) [ADMIN/BENUTZER]");
-        System.out.println("9)  Artikel bearbeiten [ADMIN/BENUTZER]");
-        System.out.println("10) Änderungsverlauf anzeigen (per Artikel-ID)");
-        System.out.println("11) Artikel suchen (Titel/Inhalt/Kategorie)");
-        System.out.println("12) Benutzer registrieren");
-        System.out.println("13) Benutzer auflisten [ADMIN]");
-        System.out.println("14) Benutzer verwalten [ADMIN]");
+        System.out.println("8)  Artikel bearbeiten [ADMIN/BENUTZER]");
+        System.out.println("9)  Medien löschen (per Medien-ID) [ADMIN/BENUTZER]");
+        System.out.println("10) Artikel löschen (per ID) [ADMIN/ursprünglicher Autor]");
+        System.out.println("11) Änderungsverlauf anzeigen (per Artikel-ID)");
+        System.out.println("12) Benutzer verwalten [ADMIN]");
+        System.out.println("13) Logout");
         System.out.println("0)  Beenden");
         // ---- AUTH ----
         System.out.print("Status: ");
@@ -85,7 +83,7 @@ public class Main {
                 u -> System.out.println(u.getUsername() + " (" + u.getRole() + ") ist eingeloggt."),
                 () -> System.out.println("Niemand eingeloggt.")
         );
-        System.out.print("Deine Wahl: ");
+        System.out.print("=== Deine Wahl: ===\n");
     }
 
     // ---------- ARTIKEL CRUD & MEDIEN ----------
@@ -106,7 +104,9 @@ public class Main {
             return;
         }
 
-        Article a = manager.addArticle(title, content, category);
+        // set original author (logged-in user)
+        User author = auth.getCurrentUser().orElse(null);
+        Article a = manager.addArticle(title, content, category, author);
         // Erstversion anlegen
         versionManager.ensureInitial(a);
         System.out.println("Hinzugefügt: " + a);
@@ -115,7 +115,7 @@ public class Main {
     }
 
     private static void addMediaToArticle(int articleId) {
-        System.out.println("Möchtest du Medien zum Artikel hinzufügen? (j/n)");
+        System.out.println("=== Möchtest du Medien zum Artikel hinzufügen? (j/n) ===");
         String answer = scanner.nextLine().trim().toLowerCase();
         if (!answer.equals("j")) return;
 
@@ -126,7 +126,7 @@ public class Main {
             String filepath = scanner.nextLine();
 
             // --- Switch-Case MediaType Auswahl ---
-            System.out.println("Medientyp auswählen:");
+            System.out.println("=== Medientyp auswählen: ===");
             System.out.println("1) IMAGE");
             System.out.println("2) VIDEO");
             System.out.println("3) LINK");
@@ -248,6 +248,8 @@ public class Main {
             System.out.println("Title:   " + a.getTitle());
             System.out.println("Inhalt:  " + a.getContent());
             System.out.println("Kategorie: " + (a.getCategory() != null ? a.getCategory().getCategoryName() : "-"));
+            System.out.println("Autor:    " + a.getCreatorUsername());
+            System.out.println(" (id=" + a.getCreatorId() + ")");
             System.out.println("Erstellt:  " + a.getCreatedAt());
             System.out.println("Geändert:  " + a.getUpdatedAt());
             System.out.println("-----");
@@ -273,15 +275,28 @@ public class Main {
     }
 
     private static void deleteArticleById() {
-        // Nur ADMIN darf Artikel löschen
-        if (!auth.hasAnyRole(Role.ADMIN)) {
-            System.out.println("Zugriff verweigert. Nur ADMIN darf Artikel löschen.");
+        if (!auth.isLoggedIn()) {
+            System.out.println("Zugriff verweigert. Bitte zuerst einloggen.");
             return;
         }
         System.out.print("Artikel-ID zum Löschen eingeben: ");
         String idStr = scanner.nextLine().trim();
         try {
             int id = Integer.parseInt(idStr);
+            Article a = manager.findArticleById(id);
+            if (a == null) {
+                System.out.println("Kein Artikel mit ID " + id);
+                return;
+            }
+
+            User current = auth.getCurrentUser().orElse(null);
+            boolean isAdmin = auth.hasAnyRole(Role.ADMIN);
+            boolean isOriginalAuthor = (current != null && a.getCreatorId() == current.getUserId());
+
+            if (!isAdmin && !isOriginalAuthor) {
+                System.out.println("Zugriff verweigert. Nur ADMIN oder der ursprüngliche Autor darf löschen.");
+                return;
+            }
             boolean ok = manager.deleteArticleById(id);
             if (ok) {
                 System.out.println("Gelöscht: " + id);
@@ -409,20 +424,22 @@ public class Main {
         while (!back) {
             System.out.println("\n=== Benutzerverwaltung (ADMIN) ===");
             System.out.println("1) Benutzer auflisten");
-            System.out.println("2) Rolle ändern");
-            System.out.println("3) Benutzer aktivieren/deaktivieren");
-            System.out.println("4) Passwort zurücksetzen");
-            System.out.println("5) Benutzer löschen");
+            System.out.println("2) Benutzer registrieren");
+            System.out.println("3) Rolle ändern");
+            System.out.println("4) Benutzer aktivieren/deaktivieren");
+            System.out.println("5) Passwort zurücksetzen");
+            System.out.println("6) Benutzer löschen");
             System.out.println("0) Zurück");
             System.out.print("Deine Wahl: ");
             String choice = scanner.nextLine().trim();
 
             switch (choice) {
                 case "1" -> listUsers();
-                case "2" -> changeUserRole();
-                case "3" -> toggleUserEnabled();
-                case "4" -> resetUserPassword();
-                case "5" -> deleteUser();
+                case "2" -> registerUser();
+                case "3" -> changeUserRole();
+                case "4" -> toggleUserEnabled();
+                case "5" -> resetUserPassword();
+                case "6" -> deleteUser();
                 case "0" -> back = true;
                 default  -> System.out.println("Ungültige Option.");
             }
@@ -609,6 +626,17 @@ public class Main {
         try {
             User u = userStore.register(username, password, email, role);
             System.out.println("Registriert: " + u.getUsername() + " (" + u.getRole() + ")");
+            // Automatisches Login nur bei Selbstregistrierung (wenn momentan niemand eingeloggt ist)
+            if (!auth.isLoggedIn()) {
+                boolean loggedIn = auth.login(u.getUsername(), password);
+                if (loggedIn) {
+                    System.out.println("Du bist jetzt eingeloggt als " + u.getUsername() + " (" + u.getRole() + ").");
+                } else {
+                    System.out.println("Hinweis: Bitte jetzt mit deinen Zugangsdaten einloggen.");
+                }
+            } else if (auth.hasAnyRole(Role.ADMIN)) {
+                System.out.println("Hinweis: Admin bleibt eingeloggt. Neuer Nutzer muss sich selbst einloggen.");
+            }
         } catch (IllegalArgumentException ex) {
             System.out.println("Fehler: " + ex.getMessage());
         }

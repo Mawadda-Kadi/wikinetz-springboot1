@@ -8,17 +8,21 @@ public class Article {
     private String title;
     private String content;
     private Category category;
+    private final int creatorId;
+    private final String creatorUsername;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 
 
     // Article Constructor
-    public Article(int articleId, String title, String content, Category category) {
+    public Article(int articleId, String title, String content, Category category, int creatorId, String creatorUsername) {
 
         this.articleId = articleId;
         this.title = title;
         this.content = content;
         this.category = category;
+        this.creatorId = creatorId;
+        this.creatorUsername = creatorUsername;
         this.createdAt = LocalDateTime.now();
         this.updatedAt = this.createdAt;
     }
@@ -27,23 +31,20 @@ public class Article {
     public int getArticleId() {
         return articleId;
     }
-
     public String getTitle() {
         return title;
     }
-
     public String getContent() {
         return content;
     }
-
     public Category getCategory() {
         return category;
     }
-
+    public int getCreatorId() { return creatorId; }
+    public String getCreatorUsername() { return creatorUsername; }
     public LocalDateTime getCreatedAt() {
         return createdAt;
     }
-
     public LocalDateTime getUpdatedAt() {
         return updatedAt;
     }

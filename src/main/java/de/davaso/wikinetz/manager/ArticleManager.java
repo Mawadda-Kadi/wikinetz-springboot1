@@ -3,6 +3,7 @@ package de.davaso.wikinetz.manager;
 
 import de.davaso.wikinetz.model.Article;
 import de.davaso.wikinetz.model.Category;
+import de.davaso.wikinetz.model.User;
 
 import java.util.*;
 
@@ -17,8 +18,10 @@ public class ArticleManager {
 
 
     // Erstellt einen neuen Artikel und fügt ihn der Liste hinzu.
-    public Article addArticle(String title, String content, Category category) {
-        Article a = new Article(nextArticleId++, title, content, category);
+    public Article addArticle(String title, String content, Category category, User author) {
+        int creatorId = (author != null) ? author.getUserId() : -1;
+        String creatorUsername = (author != null) ? author.getUsername() : "SYSTEM";
+        Article a = new Article(nextArticleId++, title, content, category, creatorId, creatorUsername);
         articles.put(a.getArticleId(), a);
         return a;
     }
