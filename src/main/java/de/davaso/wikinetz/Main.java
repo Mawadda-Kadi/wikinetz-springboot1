@@ -49,10 +49,9 @@ public class Main {
                 case "8"  -> editArticle();
                 case "9"  -> deleteMediaById();
                 case "10" -> deleteArticleById();
-                case "11" -> showArticleVersions();
-                case "12" -> restoreArticleVersion();
-                case "13" -> manageUsers();
-                case "14" -> logout();
+                case "11" -> versionToolsMenu();
+                case "12" -> manageUsers();
+                case "13" -> logout();
                 case "0"  -> {
                     running = false;
                     System.out.println("Programm beendet.");
@@ -75,9 +74,8 @@ public class Main {
         System.out.println("9)  Medien löschen (per Medien-ID) [ADMIN/BENUTZER]");
         System.out.println("10) Artikel löschen (per ID) [ADMIN/ursprünglicher Autor]");
         System.out.println("11) Änderungsverlauf anzeigen (per Artikel-ID)");
-        System.out.println("12) Artikelversion wiederherstellen [ADMIN/ursprünglicher Autor]");
-        System.out.println("13) Benutzer verwalten [ADMIN]");
-        System.out.println("14) Logout");
+        System.out.println("12) Benutzer verwalten [ADMIN]");
+        System.out.println("13) Logout");
         System.out.println("0)  Beenden");
         // ---- AUTH ----
         System.out.print("Status: ");
@@ -88,6 +86,16 @@ public class Main {
         System.out.print("=== Deine Wahl: ===\n");
     }
 
+
+    // ---- Media Snapshot ----
+    private static java.util.List<MediaSnapshot> currentMediaSnapshots(int articleId) {
+        java.util.List<Media> media = mediaManager.getMediaByArticleId(articleId);
+        java.util.List<MediaSnapshot> snaps = new java.util.ArrayList<>();
+        for (Media m : media) {
+            snaps.add(new MediaSnapshot(m.getFilename(), m.getFilepath(), m.getType()));
+        }
+        return snaps;
+    }
 
     // ==================ARTIKEL CRUD & MEDIEN ==================
     private static void addArticle() {
@@ -111,10 +119,12 @@ public class Main {
         User author = auth.getCurrentUser().orElse(null);
         Article a = manager.addArticle(title, content, category, author);
         // Erstversion anlegen
-        versionManager.ensureInitial(a);
-        System.out.println("Hinzugefügt: " + a);
-        // Medien hinzufügen
         addMediaToArticle(a.getArticleId());
+
+        // v1 erstellen
+        var snaps = currentMediaSnapshots(a.getArticleId());
+        versionManager.ensureInitial(a, snaps);
+        System.out.println("Hinzugefügt: " + a);
     }
 
     private static void addMediaToArticle(int articleId) {
@@ -271,7 +281,6 @@ public class Main {
             System.out.println("Autor:    " + a.getCreatorUsername());
             System.out.println(" (id=" + a.getCreatorId() + ")");
             System.out.println("Erstellt:  " + a.getCreatedAt());
-            System.out.println("Geändert:  " + a.getUpdatedAt());
             System.out.println("-----");
 
             List<Media> mediaList = mediaManager.getMediaByArticleId(id);
@@ -287,6 +296,20 @@ public class Main {
                     System.out.println();
                 }
             }
+            System.out.println("-----");
+            System.out.println("Geändert:  " + a.getUpdatedAt());
+            var latestOpt = versionManager.latest(id);
+            if (latestOpt.isPresent()) {
+                Version v = latestOpt.get();
+                System.out.println("Letzte Änderung: v" + v.getVersionNumber()
+                        + " | " + v.getCreatedAt()
+                        + " | von " + (v.getEditorUsername() != null ? v.getEditorUsername() : "SYSTEM")
+                        + " | " + v.getNote());
+            } else {
+                System.out.println("Letzte Änderung: (keine Versionsdaten)");
+            }
+
+            System.out.println("-----");
 
         } catch (NumberFormatException e) {
             System.out.println("Bitte eine Zahl eingeben.");
@@ -328,29 +351,6 @@ public class Main {
         }
     }
 
-   private static void showArticleVersions() {
-       System.out.print("Artikel-ID: ");
-       String idStr = scanner.nextLine().trim();
-       try {
-           int articleId = Integer.parseInt(idStr);
-           List<Version> versions = versionManager.listVersions(articleId);
-           if (versions.isEmpty()) {
-               System.out.println("Keine Versionen gefunden.");
-           } else {
-               System.out.println("Änderungsverlauf für Artikel " + articleId + ":");
-               for (Version v : versions) {
-                   System.out.println("v" + v.getVersionNumber() + "  |  " +
-                           v.getCreatedAt() + "  |  " +
-                           (v.getEditorUsername() != null ? v.getEditorUsername() : "SYSTEM") + "  |  " +
-                           v.getNote());
-               }
-           }
-       } catch (NumberFormatException e) {
-           System.out.println("Ungültige Artikel-ID.");
-       }
-   }
-
-
     // ================== Bearbeiten & Snapshot ==================
     private static void editArticle() {
         // VIEWER darf NICHT bearbeiten
@@ -383,7 +383,7 @@ public class Main {
                 article.setContent(newContent);
             }
 
-            // Kategorie ändern
+            // Kategorie bearbeiten
             System.out.print("Kategorie ändern? (j/n): ");
             String changeCat = scanner.nextLine().trim().toLowerCase();
             if (changeCat.equals("j")) {
@@ -392,25 +392,17 @@ public class Main {
                     article.setCategory(newCategory);
                 }
             }
-            // Medien ändern
-            Optional<User> editor = auth.getCurrentUser();
+            // Medien bearbeiten
             boolean mediaChanged = editMediaForArticle(article.getArticleId());
-            if (mediaChanged) {
-                versionManager.snapshot(
-                        article,
-                        editor.orElse(null),
-                        "Medien bearbeitet"
-                );
-            }
+            // EIN Snapshot am Ende mit aktueller Medienlage
+            Optional<User> editorOpt = auth.getCurrentUser();
+            var snaps = currentMediaSnapshots(article.getArticleId());
+            String note = mediaChanged ? "Bearbeitung (inkl. Medien)" : "Bearbeitung";
 
-            // Version speichern (Snapshot)
-            versionManager.snapshot(
-                    article,
-                    editor.orElse(null),
-                    "Bearbeitung"
-            );
-
-            System.out.println("Artikel wurde aktualisiert und Version gespeichert.");
+            // Version speichern
+            versionManager.snapshot(article, editorOpt.orElse(null), note, snaps);
+            String editorName = editorOpt.map(User::getUsername).orElse("SYSTEM");
+            System.out.println("Artikel wurde aktualisiert und Version gespeichert (Editor: " + editorName + ").");
 
         } catch (NumberFormatException e) {
             System.out.println("Ungültige Artikel-ID.");
@@ -522,6 +514,238 @@ public class Main {
             }
         }
     }
+
+    // ================== Version Tools ==================
+    private static void versionToolsMenu() {
+        boolean back = false;
+        while (!back) {
+            System.out.println("\n=== Version-Tools ===");
+            System.out.println("1) Neueste Version anzeigen (per Artikel-ID)");
+            System.out.println("2) Anzahl Versionen anzeigen (per Artikel-ID)");
+            System.out.println("3) Alle Versionen aller Artikel anzeigen");
+            System.out.println("4) Einzelne Artikelversion anzeigen (per Version-ID)");
+            System.out.println("5) Artikelversion wiederherstellen [ADMIN/ursprünglicher Autor]");
+            System.out.println("6) Versionsverlauf für EINEN Artikel löschen [ADMIN]");
+            System.out.println("0) Zurück");
+            System.out.print("Deine Wahl: ");
+            String choice = scanner.nextLine().trim();
+
+            switch (choice) {
+                case "1" -> showLatestVersion();
+                case "2" -> showVersionCount();
+                case "3" -> listAllVersionsAcrossArticles();
+                case "4" -> showSingleArticleVersion();
+                case "5" -> restoreArticleVersion();
+                case "6" -> clearVersionHistoryForArticle();
+                case "0" -> back = true;
+                default  -> System.out.println("Ungültige Option.");
+            }
+        }
+    }
+
+    private static void showLatestVersion() {
+        System.out.print("Artikel-ID: ");
+        String idStr = scanner.nextLine().trim();
+        try {
+            int articleId = Integer.parseInt(idStr);
+            var opt = versionManager.latest(articleId);
+            if (opt.isEmpty()) {
+                System.out.println("Keine Versionen gefunden.");
+                return;
+            }
+            Version v = opt.get();
+            System.out.println("Neueste Version für Artikel " + articleId + ":");
+            System.out.println("v" + v.getVersionNumber() + " | " + v.getCreatedAt() + " | " +
+                    (v.getEditorUsername() != null ? v.getEditorUsername() : "SYSTEM") + " | " + v.getNote());
+        } catch (NumberFormatException e) {
+            System.out.println("Bitte eine gültige Zahl eingeben.");
+        }
+    }
+
+    private static void showVersionCount() {
+        System.out.print("Artikel-ID: ");
+        String idStr = scanner.nextLine().trim();
+        try {
+            int articleId = Integer.parseInt(idStr);
+            int c = versionManager.count(articleId);
+            System.out.println("Anzahl Versionen für Artikel " + articleId + ": " + c);
+        } catch (NumberFormatException e) {
+            System.out.println("Bitte eine gültige Zahl eingeben.");
+        }
+    }
+
+    private static void listAllVersionsAcrossArticles() {
+        var allArticles = manager.getAllArticles();
+        if (allArticles.isEmpty()) {
+            System.out.println("Keine Artikel vorhanden.");
+            return;
+        }
+        boolean any = false;
+        for (Article a : allArticles) {
+            var versions = versionManager.listVersions(a.getArticleId());
+            if (versions.isEmpty()) continue;
+            any = true;
+            System.out.println("\nÄnderungsverlauf für Artikel " + a.getArticleId() + " – " + a.getTitle() + ":");
+            for (Version v : versions) {
+                System.out.println("v" + v.getVersionNumber() + "  |  " +
+                        v.getCreatedAt() + "  |  " +
+                        (v.getEditorUsername() != null ? v.getEditorUsername() : "SYSTEM") + "  |  " +
+                        v.getNote());
+            }
+        }
+        if (!any) {
+            System.out.println("Es gibt noch keine Versionen in irgendeinem Artikel.");
+        }
+    }
+
+    private static void showSingleArticleVersion() {
+        System.out.print("Artikel-ID: ");
+        String idStr = scanner.nextLine().trim();
+        try {
+            int articleId = Integer.parseInt(idStr);
+
+            Article article = manager.findArticleById(articleId);
+            if (article == null) {
+                System.out.println("Kein Artikel mit der ID " + articleId);
+                return;
+            }
+
+            System.out.print("Versionsnummer: ");
+            String vStr = scanner.nextLine().trim();
+            int vNo = Integer.parseInt(vStr);
+
+            java.util.Optional<Version> opt = versionManager.getVersion(articleId, vNo);
+            if (opt.isEmpty()) {
+                System.out.println("Version v" + vNo + " nicht gefunden.");
+                return;
+            }
+            Version v = opt.get();
+
+            System.out.println("\n----- Version-Details -----");
+            System.out.println("Artikel-ID: " + articleId);
+            System.out.println("Aktueller Titel: " + article.getTitle());
+            System.out.println("Version: v" + v.getVersionNumber() + "  |  " + v.getCreatedAt());
+            System.out.println("Editor: " + (v.getEditorUsername() != null ? v.getEditorUsername() : "SYSTEM"));
+            System.out.println("Notiz:  " + v.getNote());
+            System.out.println("Titel (Snapshot):   " + v.getTitle());
+            System.out.println("Inhalt (Snapshot):  " + v.getContent());
+            System.out.println("Kategorie (Snapshot): " + (v.getCategory() != null ? v.getCategory().getCategoryName() : "-"));
+
+            var mediaSnaps = v.getMedia();
+            if (mediaSnaps == null || mediaSnaps.isEmpty()) {
+                System.out.println("\nMedien (Snapshot): Keine");
+            } else {
+                System.out.println("\nMedien (Snapshot):");
+                for (MediaSnapshot ms : mediaSnaps) {
+                    System.out.println("- " + ms.getType() + " | " + ms.getFilename() + " | " + ms.getFilepath());
+                }
+            }
+
+        } catch (NumberFormatException e) {
+            System.out.println("Bitte eine gültige Zahl eingeben.");
+        }
+    }
+
+
+    private static void restoreArticleVersion() {
+        if (!auth.isLoggedIn()) {
+            System.out.println("Zugriff verweigert. Bitte zuerst einloggen.");
+            return;
+        }
+
+        System.out.print("Artikel-ID: ");
+        String idStr = scanner.nextLine().trim();
+        try {
+            int articleId = Integer.parseInt(idStr);
+            Article a = manager.findArticleById(articleId);
+            if (a == null) {
+                System.out.println("Kein Artikel mit der ID " + articleId);
+                return;
+            }
+
+            User current = auth.getCurrentUser().orElse(null);
+            boolean isAdmin = auth.hasAnyRole(Role.ADMIN);
+            boolean isOriginalAuthor = current != null && current.getUserId() == a.getCreatorId();
+            if (!isAdmin && !isOriginalAuthor) {
+                System.out.println("Zugriff verweigert. Nur ADMIN oder der ursprüngliche Autor darf Versionen wiederherstellen.");
+                return;
+            }
+
+            // Verfügbare Versionen anzeigen
+            var versions = versionManager.listVersions(articleId);
+            if (versions.isEmpty()) {
+                System.out.println("Keine Versionen gefunden.");
+                return;
+            }
+            System.out.println("Änderungsverlauf für Artikel " + articleId + ":");
+            for (Version v : versions) {
+                System.out.println("v" + v.getVersionNumber() + "  |  " +
+                        v.getCreatedAt() + "  |  " +
+                        (v.getEditorUsername() != null ? v.getEditorUsername() : "SYSTEM") + "  |  " +
+                        v.getNote());
+            }
+
+            System.out.print("Welche Versionsnummer wiederherstellen? ");
+            String vStr = scanner.nextLine().trim();
+            int vNo = Integer.parseInt(vStr);
+
+            boolean ok = versionManager.restore(a, vNo, current, "Wiederhergestellt aus v" + vNo);
+            if (ok) {
+                System.out.println("Artikel wurde auf v" + vNo + " zurückgesetzt und eine neue Version gespeichert.");
+            } else {
+                System.out.println("Version v" + vNo + " existiert nicht.");
+            }
+            // Restore Media
+            var restored = versionManager.getVersion(articleId, vNo);
+            restored.ifPresent(ver -> mediaManager.replaceAllForArticle(articleId, ver.getMedia()));
+
+        } catch (NumberFormatException e) {
+            System.out.println("Bitte eine gültige Zahl eingeben.");
+        }
+    }
+
+    private static void clearVersionHistoryForArticle() {
+
+        System.out.print("Artikel-ID: ");
+        String idStr = scanner.nextLine().trim();
+        try {
+            int articleId = Integer.parseInt(idStr);
+            Article a = manager.findArticleById(articleId);
+            if (a == null) {
+                System.out.println("Kein Artikel mit der ID " + articleId);
+                return;
+            }
+            User current = auth.getCurrentUser().orElse(null);
+            boolean isAdmin = auth.hasAnyRole(Role.ADMIN);
+            boolean isOriginalAuthor = (current != null && a.getCreatorId() == current.getUserId());
+
+            if (!isAdmin && !isOriginalAuthor) {
+                System.out.println("Zugriff verweigert. Nur ADMIN oder der ursprüngliche Autor darf löschen.");
+                return;
+            }
+
+            System.out.println("WARNUNG: Dies löscht den kompletten Versionsverlauf NUR für Artikel "
+                    + articleId + " („" + a.getTitle() + "“).");
+            System.out.print("Zum Bestätigen 'LÖSCHEN " + articleId + "' eingeben (oder Enter zum Abbrechen): ");
+            String confirm = scanner.nextLine().trim();
+            if (!("LÖSCHEN " + articleId).equals(confirm)) {
+                System.out.println("Abgebrochen.");
+                return;
+            }
+
+            boolean ok = versionManager.clearForArticle(articleId);
+            if (ok) {
+                System.out.println("Versionsverlauf für Artikel " + articleId + " wurde gelöscht.");
+
+            } else {
+                System.out.println("Kein Versionsverlauf vorhanden oder bereits leer.");
+            }
+
+        } catch (NumberFormatException e) {
+            System.out.println("Bitte eine gültige Zahl eingeben.");
+        }
+    }
+
 
     // ================== SEARCH ==================
     private static void searchArticles() {

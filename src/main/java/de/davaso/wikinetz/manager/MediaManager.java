@@ -2,6 +2,7 @@ package de.davaso.wikinetz.manager;
 
 import de.davaso.wikinetz.model.Media;
 import de.davaso.wikinetz.model.MediaType;
+import de.davaso.wikinetz.model.MediaSnapshot;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -41,6 +42,17 @@ public class MediaManager {
         if (newFilepath != null) m.setFilepath(newFilepath);
         if (newType != null) m.setType(newType);
         return true;
+    }
+
+    public void replaceAllForArticle(int articleId, java.util.List<MediaSnapshot> snaps) {
+        // remove all current media for the article
+        mediaList.removeIf(m -> m.getArticleId() == articleId);
+        // re-add from snapshots (new ids)
+        if (snaps != null) {
+            for (MediaSnapshot s : snaps) {
+                addMedia(articleId, s.getFilename(), s.getFilepath(), s.getType());
+            }
+        }
     }
 
     public boolean deleteMediaById(int mediaId) {

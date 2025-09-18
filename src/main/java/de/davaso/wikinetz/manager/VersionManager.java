@@ -3,6 +3,7 @@ package de.davaso.wikinetz.manager;
 import de.davaso.wikinetz.model.Article;
 import de.davaso.wikinetz.model.User;
 import de.davaso.wikinetz.model.Version;
+import de.davaso.wikinetz.model.MediaSnapshot;
 
 import java.time.LocalDateTime;
 import java.util.*;
@@ -21,20 +22,24 @@ public class VersionManager {
     }
 
     /** Ensure v1 exists for an article (call when the article is created/first seen). */
-    public Version ensureInitial(Article a) {
+    public Version ensureInitial(Article a, java.util.List<MediaSnapshot> mediaSnaps) {
         List<Version> list = bucket(a.getArticleId());
         if (list.isEmpty()) {
+            Integer creatorId = (a.getCreatorId() < 0) ? null : a.getCreatorId();
+            String creatorName = (a.getCreatorUsername() != null) ? a.getCreatorUsername() : "SYSTEM";
+
             Version v = new Version(
-                    1,                          // versionNumber (per-article)
-                    a.getArticleId(),           // articleId
-                    globalSeq.incrementAndGet(),// global sequence (optional)
+                    1,
+                    a.getArticleId(),
+                    globalSeq.incrementAndGet(),
                     a.getTitle(),
                     a.getContent(),
                     a.getCategory(),
-                    "Initiale Erstellung",      // note
-                    null,                       // editorId (null = SYSTEM/unknown)
-                    "SYSTEM",                   // editor username snapshot
-                    LocalDateTime.now()         // createdAt
+                    "Initiale Erstellung",
+                    creatorId,
+                    creatorName,
+                    a.getCreatedAt(),
+                    mediaSnaps == null ? java.util.List.of() : mediaSnaps
             );
             list.add(v);
             return v;
@@ -43,7 +48,7 @@ public class VersionManager {
     }
 
     /** Create a new snapshot from the current article state (call after any edit). */
-    public Version snapshot(Article a, User editor, String note) {
+    public Version snapshot(Article a, User editor, String note, java.util.List<MediaSnapshot> mediaSnaps) {
         List<Version> list = bucket(a.getArticleId());
         int nextNo = list.size() + 1;
         Version v = new Version(
@@ -56,10 +61,15 @@ public class VersionManager {
                 (note == null || note.isBlank()) ? "Änderung" : note,
                 (editor != null) ? editor.getUserId()   : null,
                 (editor != null) ? editor.getUsername() : "SYSTEM",
-                LocalDateTime.now()
+                LocalDateTime.now(),
+                mediaSnaps == null ? java.util.List.of() : mediaSnaps
         );
         list.add(v);
         return v;
+    }
+
+    public Version snapshot(Article a, User editor, String note) {
+        return snapshot(a, editor, note, java.util.List.of());
     }
 
     /** Read-only list of versions for UI/history. */
@@ -95,7 +105,12 @@ public class VersionManager {
         return true;
     }
 
-    /** Optional helpers */
+    public boolean clearForArticle(int articleId) {
+        List<Version> list = versionsByArticle.get(articleId);
+        if (list == null || list.isEmpty()) return false;
+        versionsByArticle.remove(articleId);
+        return true;
+    }
+
     public int count(int articleId) { return bucket(articleId).size(); }
-    public void clearAll() { versionsByArticle.clear(); }
 }

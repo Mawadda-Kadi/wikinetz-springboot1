@@ -13,6 +13,8 @@ public class Version {
     private final Integer editorId;
     private final String editorUsername;
     private LocalDateTime createdAt;
+    private final java.util.List<MediaSnapshot> media;
+    public java.util.List<MediaSnapshot> getMedia() { return media; }
 
     public Version(
             int versionNumber,
@@ -24,7 +26,8 @@ public class Version {
             String note,
             Integer editorId,
             String editorUsername,
-            LocalDateTime createdAt
+            LocalDateTime createdAt,
+            java.util.List<MediaSnapshot> media
     ) {
         this.versionNumber = versionNumber;
         this.articleId = articleId;
@@ -36,6 +39,7 @@ public class Version {
         this.editorId = editorId;
         this.editorUsername = editorUsername;
         this.createdAt = createdAt;
+        this.media = java.util.List.copyOf(media == null ? java.util.List.of() : media);
     }
 
     // Getters
