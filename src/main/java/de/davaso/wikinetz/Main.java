@@ -50,8 +50,9 @@ public class Main {
                 case "9"  -> deleteMediaById();
                 case "10" -> deleteArticleById();
                 case "11" -> showArticleVersions();
-                case "12" -> manageUsers();
-                case "13" -> logout();
+                case "12" -> restoreArticleVersion();
+                case "13" -> manageUsers();
+                case "14" -> logout();
                 case "0"  -> {
                     running = false;
                     System.out.println("Programm beendet.");
@@ -74,8 +75,9 @@ public class Main {
         System.out.println("9)  Medien löschen (per Medien-ID) [ADMIN/BENUTZER]");
         System.out.println("10) Artikel löschen (per ID) [ADMIN/ursprünglicher Autor]");
         System.out.println("11) Änderungsverlauf anzeigen (per Artikel-ID)");
-        System.out.println("12) Benutzer verwalten [ADMIN]");
-        System.out.println("13) Logout");
+        System.out.println("12) Artikelversion wiederherstellen [ADMIN/ursprünglicher Autor]");
+        System.out.println("13) Benutzer verwalten [ADMIN]");
+        System.out.println("14) Logout");
         System.out.println("0)  Beenden");
         // ---- AUTH ----
         System.out.print("Status: ");
@@ -86,7 +88,8 @@ public class Main {
         System.out.print("=== Deine Wahl: ===\n");
     }
 
-    // ---------- ARTIKEL CRUD & MEDIEN ----------
+
+    // ==================ARTIKEL CRUD & MEDIEN ==================
     private static void addArticle() {
         // ---- AUTH: Erlaubt USER/ADMIN das Hinzufügen; VIEWER darf es nicht ----
         if (!auth.hasAnyRole(Role.ADMIN, Role.BENUTZER)) {
@@ -125,7 +128,7 @@ public class Main {
             System.out.print("Dateipfad: ");
             String filepath = scanner.nextLine();
 
-            // --- Switch-Case MediaType Auswahl ---
+            // ================== Switch-Case MediaType Auswahl ==================
             System.out.println("=== Medientyp auswählen: ===");
             System.out.println("1) IMAGE");
             System.out.println("2) VIDEO");
@@ -218,6 +221,23 @@ public class Main {
                 System.out.println("Bitte eine Zahl eingeben.");
             }
         }
+    }
+
+    private static MediaType promptMediaTypeAllowEmpty(boolean allowEmpty) {
+        System.out.println("1) IMAGE");
+        System.out.println("2) VIDEO");
+        System.out.println("3) LINK");
+        if (allowEmpty) System.out.println("(Enter = unverändert)");
+        System.out.print("Deine Wahl: ");
+        String s = scanner.nextLine().trim();
+        if (s.isEmpty() && allowEmpty) return null;
+
+        return switch (s) {
+            case "1" -> MediaType.IMAGE;
+            case "2" -> MediaType.VIDEO;
+            case "3" -> MediaType.LINK;
+            default -> null;
+        };
     }
 
     private static void listArticles() {
@@ -330,7 +350,8 @@ public class Main {
        }
    }
 
-    // ---- Bearbeiten & Snapshot ----
+
+    // ================== Bearbeiten & Snapshot ==================
     private static void editArticle() {
         // VIEWER darf NICHT bearbeiten
         if (!auth.hasAnyRole(Role.ADMIN, Role.BENUTZER)) {
@@ -371,9 +392,18 @@ public class Main {
                     article.setCategory(newCategory);
                 }
             }
+            // Medien ändern
+            Optional<User> editor = auth.getCurrentUser();
+            boolean mediaChanged = editMediaForArticle(article.getArticleId());
+            if (mediaChanged) {
+                versionManager.snapshot(
+                        article,
+                        editor.orElse(null),
+                        "Medien bearbeitet"
+                );
+            }
 
             // Version speichern (Snapshot)
-            Optional<User> editor = auth.getCurrentUser();
             versionManager.snapshot(
                     article,
                     editor.orElse(null),
@@ -387,8 +417,113 @@ public class Main {
         }
     }
 
+    private static boolean editMediaForArticle(int articleId) {
+        boolean anyChange = false;
+        while (true) {
+            System.out.println("\n=== Medien bearbeiten (Artikel-ID " + articleId + ") ===");
+            System.out.println("1) Medien auflisten");
+            System.out.println("2) Medium hinzufügen");
+            System.out.println("3) Medium bearbeiten");
+            System.out.println("4) Medium löschen");
+            System.out.println("0) Fertig");
+            System.out.print("Deine Wahl: ");
+            String choice = scanner.nextLine().trim();
 
-    // ---------- SEARCH ----------
+            switch (choice) {
+                case "1" -> {
+                    List<Media> media = mediaManager.getMediaByArticleId(articleId);
+                    if (media.isEmpty()) {
+                        System.out.println("Keine Medien vorhanden.");
+                    } else {
+                        System.out.println("Medien:");
+                        for (Media m : media) {
+                            System.out.println("- ID: " + m.getMediaId());
+                            System.out.println("  Dateiname: " + m.getFilename());
+                            System.out.println("  Pfad: " + m.getFilepath());
+                            System.out.println("  Typ: " + m.getType());
+                            System.out.println();
+                        }
+                    }
+                }
+                case "2" -> {
+                    System.out.print("Dateiname: ");
+                    String filename = scanner.nextLine();
+                    System.out.print("Dateipfad/URL: ");
+                    String filepath = scanner.nextLine();
+                    MediaType type = promptMediaTypeAllowEmpty(false); // zwingend wählen
+                    if (type == null) {
+                        System.out.println("Abgebrochen: ungültiger Medientyp.");
+                    } else {
+                        var m = mediaManager.addMedia(articleId, filename, filepath, type);
+                        System.out.println("Hinzugefügt: " + m);
+                        anyChange = true;
+                    }
+                }
+                case "3" -> {
+                    System.out.print("Medien-ID zum Bearbeiten: ");
+                    String idStr = scanner.nextLine().trim();
+                    try {
+                        int mediaId = Integer.parseInt(idStr);
+                        var m = mediaManager.findById(mediaId);
+                        if (m == null || m.getArticleId() != articleId) {
+                            System.out.println("Kein Medium mit dieser ID für diesen Artikel gefunden.");
+                            break;
+                        }
+                        System.out.println("Aktueller Dateiname: " + m.getFilename());
+                        System.out.print("Neuer Dateiname (leer = unverändert): ");
+                        String newName = scanner.nextLine().trim();
+                        if (newName.isEmpty()) newName = null;
+
+                        System.out.println("Aktueller Pfad/URL: " + m.getFilepath());
+                        System.out.print("Neuer Pfad/URL (leer = unverändert): ");
+                        String newPath = scanner.nextLine().trim();
+                        if (newPath.isEmpty()) newPath = null;
+
+                        System.out.println("Aktueller Typ: " + m.getType());
+                        System.out.println("Neuen Typ wählen (leer = unverändert):");
+                        MediaType newType = promptMediaTypeAllowEmpty(true); // optional
+
+                        boolean ok = mediaManager.updateMedia(mediaId, newName, newPath, newType);
+                        if (ok) {
+                            System.out.println("Medium aktualisiert.");
+                            anyChange = true;
+                        } else {
+                            System.out.println("Aktualisierung fehlgeschlagen.");
+                        }
+                    } catch (NumberFormatException e) {
+                        System.out.println("Bitte eine gültige Zahl eingeben.");
+                    }
+                }
+                case "4" -> {
+                    System.out.print("Medien-ID zum Löschen: ");
+                    String idStr = scanner.nextLine().trim();
+                    try {
+                        int mediaId = Integer.parseInt(idStr);
+                        var m = mediaManager.findById(mediaId);
+                        if (m == null || m.getArticleId() != articleId) {
+                            System.out.println("Kein Medium mit dieser ID für diesen Artikel gefunden.");
+                            break;
+                        }
+                        boolean deleted = mediaManager.deleteMediaById(mediaId);
+                        if (deleted) {
+                            System.out.println("Medium gelöscht.");
+                            anyChange = true;
+                        } else {
+                            System.out.println("Löschen fehlgeschlagen.");
+                        }
+                    } catch (NumberFormatException e) {
+                        System.out.println("Bitte eine gültige Zahl eingeben.");
+                    }
+                }
+                case "0" -> {
+                    return anyChange;
+                }
+                default -> System.out.println("Ungültige Option.");
+            }
+        }
+    }
+
+    // ================== SEARCH ==================
     private static void searchArticles() {
         System.out.print("Suchbegriff (Titel/Inhalt; leer = abbrechen): ");
         String q = scanner.nextLine().trim();
@@ -407,11 +542,12 @@ public class Main {
                         (a.getTitle() != null && a.getTitle().toLowerCase().contains(qLower)) ||
                                 (a.getContent() != null && a.getContent().toLowerCase().contains(qLower))
                 )
-                .filter(a -> filterCat == null || a.getCategory() == filterCat) // ok, Category ist Enum, '==' passt
+                .filter(a -> filterCat == null || a.getCategory() == filterCat)
                 .sorted(Comparator.comparingInt(Article::getArticleId))
                 .forEach(a -> System.out.println(a.getArticleId() + " - " + a.getTitle() +
                         " [" + (a.getCategory() != null ? a.getCategory().getCategoryName() : "-") + "]"));
     }
+
 
     // ================== BENUTZER-VERWALTUNG (ADMIN) ==================
     private static void manageUsers() {
@@ -550,13 +686,35 @@ public class Main {
         }
         User target = userOpt.get();
 
+        /*
+        auth.getCurrentUser()
+        Gibt ein Optional<User> zurück.
+        Leer, wenn niemand eingeloggt ist; andernfalls enthält es den aktuellen User.
+
+        .map(User::getUsername)
+        Wenn ein User vorhanden ist, wird er in seinen Benutzernamen (String) umgewandelt.
+        Das Ergebnis ist nun ein Optional<String>.
+
+        .filter(username::equals)
+        Behält den Wert nur dann, wenn er dem im Konsolenfeld eingegebenen username entspricht.
+        Passt er nicht, wird das Optional leer.
+
+        .isPresent()
+        Prüft, ob nach dem Filtern noch ein Wert vorhanden ist.
+
+        :: ist der Methodenreferenz-Operator.
+        Er verweist auf eine Methode, ohne sie sofort auszuführen,
+        z. B. User::getUsername bedeutet:
+        „Benutze die Methode getUsername() jedes User-Objekts“.
+        */
+
         // Schutz: nicht sich selbst löschen
         if (auth.getCurrentUser().map(User::getUsername).filter(username::equals).isPresent()) {
             System.out.println("Du kannst dich nicht selbst löschen.");
             return;
         }
 
-        // Optionaler Schutz: Standard-Admin nicht löschen
+        // Schutz: Standard-Admin nicht löschen
         if (username.equalsIgnoreCase("admin")) {
             System.out.println("Schutz: Standard-Admin nicht löschen.");
             return;
@@ -589,7 +747,12 @@ public class Main {
             }
         };
     }
-
+    /* Diese Methode zählt, wie viele aktive Admin-Benutzer es gibt.
+        Dies wird verwendet, um das System davor zu schützen, versehentlich
+        - den letzten Admin zu löschen,
+        - den letzten Admin zu deaktivieren.
+        - oder die Rolle des letzten Admins zu ändern.
+     */
     private static int countEnabledAdmins() {
         int count = 0;
         for (User u : userStore.listAll()) {
@@ -600,7 +763,7 @@ public class Main {
         return count;
     }
 
-    // ---------- USERS (Register & List) ----------
+    // ================== USERS (Register & List) ==================
     private static void registerUser() {
         System.out.println("=== Benutzer registrieren ===");
         System.out.print("Benutzername: ");
@@ -653,7 +816,7 @@ public class Main {
         }
     }
 
-    // ---- AUTH helpers ----
+    // ================== AUTH helpers ==================
     private static void login() {
         System.out.print("Benutzername: ");
         String username = scanner.nextLine().trim();

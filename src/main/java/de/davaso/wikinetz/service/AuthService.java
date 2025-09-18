@@ -49,7 +49,7 @@ public class AuthService {
      * @return true = Login erfolgreich, false = fehlgeschlagen
      */
     public boolean login(String username, String rawPassword) {
-        var userOpt = userStore.findByUsername(username);
+        Optional<User> userOpt = userStore.findByUsername(username);
         if (userOpt.isEmpty()) {
             return false; // Benutzername unbekannt
         }

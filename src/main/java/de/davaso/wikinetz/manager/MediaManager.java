@@ -16,14 +16,36 @@ public class MediaManager {
         return media;
     }
 
+    public Media findById(int mediaId) {
+        for (Media m : mediaList) {
+            if (m.getMediaId() == mediaId) return m;
+        }
+        return null;
+    }
+
+    // Gib alle zu Artikel X gehörenden Medien zurück.
     public List<Media> getMediaByArticleId(int articleId) {
-        return mediaList.stream() // erzeugt einen Datenstrom.
-                .filter(m -> m.getArticleId() == articleId) //filter(...) prüft jedes Element mit if-Logik
-                .toList(); //toList() sammelt alle passenden Medien in eine neue Liste.
+        // erzeugt einen Datenstrom.
+        return mediaList.stream()
+                //filter(...) prüft jedes Element mit if-Logik
+                .filter(m -> m.getArticleId() == articleId)
+                //toList() sammelt alle passenden Medien in eine neue Liste.
+                .toList();
+    }
+
+    public boolean updateMedia(int mediaId, String newFilename, String newFilepath, MediaType newType) {
+        Media m = findById(mediaId);
+        if (m == null) return false;
+
+        if (newFilename != null) m.setFilename(newFilename);
+        if (newFilepath != null) m.setFilepath(newFilepath);
+        if (newType != null) m.setType(newType);
+        return true;
     }
 
     public boolean deleteMediaById(int mediaId) {
-        return mediaList.removeIf(m -> m.getMediaId() == mediaId);//removeIf(...) geht durch die Liste.Für jedes Element wird geprüft
+        //removeIf(...) geht durch die Liste.Für jedes Element wird geprüft
+        return mediaList.removeIf(m -> m.getMediaId() == mediaId);
     }
 }
 
