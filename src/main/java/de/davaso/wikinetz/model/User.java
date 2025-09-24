@@ -1,5 +1,6 @@
 package de.davaso.wikinetz.model;
 
+import de.davaso.wikinetz.api.PasswordHasher;
 import de.davaso.wikinetz.service.PasswordUtil;
 
 public class User {
@@ -47,9 +48,7 @@ public class User {
     // Setters
     // Bisher keine Setters für Benutzername und E-Mail hinzufügt, um die Daten vor unsicherer Änderung zu schützen
     // und eine korrekte Verarbeitung zu erzwingen
-    public void setPassword(String rawPassword) {
-        this.passwordHash = PasswordUtil.hash(rawPassword);
-    }
+    public void setPasswordHash(String passwordHash) {this.passwordHash = passwordHash; }
 
     public void setRole(Role role) {
         this.role = role;

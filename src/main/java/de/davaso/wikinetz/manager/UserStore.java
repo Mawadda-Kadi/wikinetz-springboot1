@@ -1,5 +1,8 @@
 package de.davaso.wikinetz.manager;
 
+
+import de.davaso.wikinetz.api.PasswordHasher;
+import de.davaso.wikinetz.api.UserRepository;
 import de.davaso.wikinetz.model.Role;
 import de.davaso.wikinetz.model.User;
 import de.davaso.wikinetz.service.PasswordUtil;
@@ -7,13 +10,18 @@ import de.davaso.wikinetz.service.PasswordUtil;
 import java.util.*;
 
 
-public class UserStore {
+public class UserStore implements UserRepository{
 
+    private final PasswordHasher hasher;
     // Speichert alle Benutzer im Speicher (Map: ID -> User)
     private final Map<Integer, User> users = new HashMap<>();
 
     // Gibt jedem Benutzer eine eindeutige, fortlaufende ID
     private int nextUserId = 1;
+
+    public UserStore(PasswordHasher hasher) {
+        this.hasher = hasher;
+    }
 
     // Erstellt einen Admin-Benutzer
     public User ensureAdmin(String username, String password, String email) {
@@ -44,14 +52,22 @@ public class UserStore {
         return findByUsername(username).isPresent();
     }
 
+    @Override
     // Registriert einen neuen Benutzer
-    public User register(String username, String rawPassword, String email, Role role) {
+    public User register(String username, String rawPassword,
+                         String email, Role role) {
         if (existsByUsername(username)) {
             throw new IllegalArgumentException("Benutzername ist bereits vergeben.");
         }
-        User u = new User(nextUserId++, username, PasswordUtil.hash(rawPassword), email, role);
+        String hashed = hasher.hash(rawPassword);
+        User u = new User(nextUserId++, username, hashed, email, role);
         users.put(u.getUserId(), u);
         return u;
+    }
+
+    @Override
+    public void updatePassword(User user, String newRawPassword) {
+        user.setPasswordHash(hasher.hash(newRawPassword));
     }
 
     // Gibt eine Liste aller Benutzer zurück

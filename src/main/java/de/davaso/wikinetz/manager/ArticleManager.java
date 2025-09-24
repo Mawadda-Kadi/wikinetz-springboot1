@@ -1,6 +1,7 @@
 package de.davaso.wikinetz.manager;
 
 
+import de.davaso.wikinetz.api.ArticleService;
 import de.davaso.wikinetz.model.Article;
 import de.davaso.wikinetz.model.Category;
 import de.davaso.wikinetz.model.User;
@@ -8,7 +9,7 @@ import de.davaso.wikinetz.model.User;
 import java.util.*;
 
 
-public class ArticleManager {
+public class ArticleManager implements ArticleService{
 
     // Speichert alle Artikel im Speicher, während das Programm läuft
     private final Map<Integer, Article> articles = new HashMap<>();

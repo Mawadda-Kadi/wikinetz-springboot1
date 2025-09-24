@@ -1,5 +1,6 @@
 package de.davaso.wikinetz.manager;
 
+import de.davaso.wikinetz.api.MediaService;
 import de.davaso.wikinetz.model.Media;
 import de.davaso.wikinetz.model.MediaType;
 import de.davaso.wikinetz.model.MediaSnapshot;
@@ -7,7 +8,7 @@ import de.davaso.wikinetz.model.MediaSnapshot;
 import java.util.ArrayList;
 import java.util.List;
 
-public class MediaManager {
+public class MediaManager implements MediaService {
     private final List<Media> mediaList = new ArrayList<>();
     private int nextId = 1;
 

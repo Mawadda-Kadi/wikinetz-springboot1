@@ -12,7 +12,7 @@ public class Version {
     private final String note;
     private final Integer editorId;
     private final String editorUsername;
-    private LocalDateTime createdAt;
+    private final LocalDateTime createdAt;
     private final java.util.List<MediaSnapshot> media;
     public java.util.List<MediaSnapshot> getMedia() { return media; }
 

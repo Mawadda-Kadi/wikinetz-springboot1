@@ -1,5 +1,6 @@
 package de.davaso.wikinetz.manager;
 
+import de.davaso.wikinetz.api.VersionService;
 import de.davaso.wikinetz.model.Article;
 import de.davaso.wikinetz.model.User;
 import de.davaso.wikinetz.model.Version;
@@ -10,7 +11,7 @@ import java.util.*;
 import java.util.concurrent.atomic.AtomicLong;
 
 
-public class VersionManager {
+public class VersionManager implements VersionService {
 
     // articleId -> chronological versions
     private final Map<Integer, List<Version>> versionsByArticle = new HashMap<>();
