@@ -5,6 +5,8 @@ import de.davaso.wikinetz.api.ArticleService;
 import de.davaso.wikinetz.model.Article;
 import de.davaso.wikinetz.model.Category;
 import de.davaso.wikinetz.model.User;
+import de.davaso.wikinetz.exception.ArticleNotFoundException;
+import de.davaso.wikinetz.exception.InvalidArticleException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -24,13 +26,19 @@ public class ArticleManager implements ArticleService{
 
     // Erstellt einen neuen Artikel und fügt ihn der Liste hinzu.
     public Article addArticle(String title, String content, Category category, User author) {
-        int creatorId = (author != null) ? author.getUserId() : -1;
-        String creatorUsername = (author != null) ? author.getUsername() : "SYSTEM";
-        Article a = new Article(nextArticleId++, title, content, category, creatorId, creatorUsername);
-        articles.put(a.getArticleId(), a);
 
-        //Logging in Methoden einfügen
-        logger.info("Artikel erstellt: ID={}, Titel='{}', Autor={}", a.getArticleId(), title, creatorUsername);
+        if (title == null || title.isEmpty()) {
+            logger.error("Ungültiger Titel beim Erstellen eines Artikels");
+            throw new InvalidArticleException("Titel darf nicht leer sein");
+        }
+        if (author == null) {
+            logger.error("Ungültiger Autor beim Erstellen eines Artikels");
+            throw new InvalidArticleException("Autor darf nicht null sein");
+        }
+
+        Article a = new Article(nextArticleId++, title, content, category, author.getUserId(), author.getUsername());
+        articles.put(a.getArticleId(), a);
+        logger.info("Artikel erstellt: ID={}, Titel='{}', Autor={}", a.getArticleId(), title, author.getUsername());
         return a;
     }
 
@@ -43,13 +51,12 @@ public class ArticleManager implements ArticleService{
     // Findet einen Artikel per ID oder gibt null zurück
     public Article findArticleById(int id) {
 
-
         Article article = articles.get(id);
-        if (article != null) {
-            logger.debug("Artikel gefunden: ID={}", id);
-        } else {
+        if (article == null) {
             logger.warn("Artikel nicht gefunden: ID={}", id);
+            return null;
         }
+        logger.debug("Artikel gefunden: ID={}", id);
         return article;
     }
 
@@ -61,31 +68,29 @@ public class ArticleManager implements ArticleService{
 
     public boolean deleteArticleById(int id) {
 
-
-
         Article removed = articles.remove(id);
         if (removed != null) {
-            logger.info("Artikel gelöscht: ID={}, Titel='{}'", id, removed.getTitle());
-            return true;
-        } else {
-            logger.error("Artikel konnte nicht gelöscht werden (nicht gefunden): ID={}", id);
-            return false;
+            logger.info("Artikel gelöscht: ID={}, Titel='{}'", id);
+            throw new ArticleNotFoundException(id);
+
         }
+        logger.info("Artikel gelöscht: ID={}, Titel='{}'", id, removed.getTitle());
+        return true;
+
     }
 
   //editArticle
-    public Article getArticleById(int articleId)
-    {
+    public Article getArticleById(int articleId) {
 
         Article article = articles.get(articleId);
-        if (article != null) {
-            logger.debug("Artikel abgerufen: ID={}, Titel='{}'", articleId, article.getTitle());
-        } else {
+        if (article == null) {
             logger.warn("Artikel nicht gefunden: ID={}", articleId);
+            throw new ArticleNotFoundException(articleId);
         }
+        logger.debug("Artikel abgerufen: ID={}, Titel='{}'", articleId, article.getTitle());
         return article;
-        }
-
     }
+
+}
 
 
