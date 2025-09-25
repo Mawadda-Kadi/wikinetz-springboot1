@@ -1,6 +1,8 @@
 package de.davaso.wikinetz.model;
 
 
+import java.util.Optional;
+
 public enum Category {
     BACKEND(1, "Backend-Entwicklung"),
     FRONTEND(2, "Frontend-Entwicklung"),
@@ -26,12 +28,10 @@ public enum Category {
         return categoryName;
     }
 
-    public static Category getCategoryById(int id){
+    public static Optional<Category> getCategoryById(int id){
         for (Category c : values()) {
-            if (c.categoryId == id) {
-                return c;
-            }
+            if (c.categoryId == id) return java.util.Optional.of(c);
         }
-        return null;
+        return Optional.empty();
     }
 }
