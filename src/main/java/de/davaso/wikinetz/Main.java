@@ -7,6 +7,8 @@ import de.davaso.wikinetz.manager.UserStore;
 import de.davaso.wikinetz.manager.VersionManager;
 import de.davaso.wikinetz.model.*;
 import de.davaso.wikinetz.service.AuthServiceImp;
+import de.davaso.wikinetz.service.BCryptPasswordHasher;
+
 import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
@@ -21,7 +23,7 @@ public class Main {
     private static final VersionManager versionManager = new VersionManager();
 
     // ---- AUTH ----
-    private static PasswordHasher hasher;
+    private static PasswordHasher hasher = new BCryptPasswordHasher(12);
     private static final UserStore userStore = new UserStore(hasher);
     private static final AuthServiceImp auth = new AuthServiceImp(userStore, hasher);
     public static void main(String[] args) { System.out.println("Hello, WikiNetz!");
