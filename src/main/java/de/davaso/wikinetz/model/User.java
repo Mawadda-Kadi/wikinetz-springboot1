@@ -1,8 +1,5 @@
 package de.davaso.wikinetz.model;
 
-import de.davaso.wikinetz.api.PasswordHasher;
-import de.davaso.wikinetz.service.PasswordUtil;
-
 public class User {
     private final int userId;
     private String username;

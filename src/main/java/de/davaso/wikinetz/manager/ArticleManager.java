@@ -2,6 +2,7 @@ package de.davaso.wikinetz.manager;
 
 
 import de.davaso.wikinetz.api.ArticleService;
+import de.davaso.wikinetz.api.IdGenerator;
 import de.davaso.wikinetz.model.Article;
 import de.davaso.wikinetz.model.Category;
 import de.davaso.wikinetz.model.User;
@@ -21,10 +22,15 @@ public class ArticleManager implements ArticleService{
     private static final Logger logger = LoggerFactory.getLogger(ArticleManager.class);
 
     // Gibt jedem Artikel eine eindeutige, fortlaufende ID
-    private int nextArticleId = 1;
+    private final IdGenerator idGen;  // <- inject
+
+    public ArticleManager(IdGenerator idGen) {
+        this.idGen = idGen;
+    }
 
 
     // Erstellt einen neuen Artikel und fügt ihn der Liste hinzu.
+    @Override
     public Article addArticle(String title, String content, Category category, User author) {
 
         if (title == null || title.isEmpty()) {
@@ -36,7 +42,16 @@ public class ArticleManager implements ArticleService{
             throw new InvalidArticleException("Autor darf nicht null sein");
         }
 
-        Article a = new Article(nextArticleId++, title, content, category, author.getUserId(), author.getUsername());
+        int id = idGen.nextId();
+        Article a = new Article(
+                id,
+                title,
+                content,
+                category,
+                author.getUserId(),
+                author.getUsername()
+        );
+
         articles.put(a.getArticleId(), a);
         logger.info("Artikel erstellt: ID={}, Titel='{}', Autor={}", a.getArticleId(), title, author.getUsername());
         return a;

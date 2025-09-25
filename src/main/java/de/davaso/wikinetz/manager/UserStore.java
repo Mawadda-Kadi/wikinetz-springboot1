@@ -5,7 +5,6 @@ import de.davaso.wikinetz.api.PasswordHasher;
 import de.davaso.wikinetz.api.UserRepository;
 import de.davaso.wikinetz.model.Role;
 import de.davaso.wikinetz.model.User;
-import de.davaso.wikinetz.service.PasswordUtil;
 
 import java.util.*;
 
@@ -24,15 +23,15 @@ public class UserStore implements UserRepository{
     }
 
     // Erstellt einen Admin-Benutzer
-    public User ensureAdmin(String username, String password, String email) {
-        // prüfen, ob der Benutzername schon existiert
+    @Override
+    public User ensureAdmin(String username, String rawPassword, String email) {
+        // Return existing admin with that username OR create one
         for (User u : users.values()) {
             if (u.getUsername().equals(username)) {
-                return u; // existiert schon -> zurückgeben
+                return u;
             }
         }
-        // neuen Admin erzeugen
-        User admin = new User(nextUserId++, username, PasswordUtil.hash(password), email, Role.ADMIN);
+        User admin = new User(nextUserId++, username, hasher.hash(rawPassword), email, Role.ADMIN);
         users.put(admin.getUserId(), admin);
         return admin;
     }

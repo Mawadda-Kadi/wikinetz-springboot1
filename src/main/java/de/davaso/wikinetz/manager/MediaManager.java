@@ -1,5 +1,6 @@
 package de.davaso.wikinetz.manager;
 
+import de.davaso.wikinetz.api.IdGenerator;
 import de.davaso.wikinetz.api.MediaService;
 import de.davaso.wikinetz.model.Media;
 import de.davaso.wikinetz.model.MediaType;
@@ -10,10 +11,15 @@ import java.util.List;
 
 public class MediaManager implements MediaService {
     private final List<Media> mediaList = new ArrayList<>();
-    private int nextId = 1;
+    private final IdGenerator idGen;
 
+    public MediaManager(IdGenerator idGen) {
+        this.idGen = idGen;
+    }
+
+    @Override
     public Media addMedia(int articleId, String filename, String filepath, MediaType type) {
-        Media media = new Media(nextId++, articleId, filename, filepath, type); //nextId++ erzeugt eine eindeutige ID.
+        Media media = new Media(idGen.nextId(), articleId, filename, filepath, type);
         mediaList.add(media);
         return media;
     }
