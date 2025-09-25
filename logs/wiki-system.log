@@ -1,3 +1,35 @@
 2025-09-25 09:22:46 INFO  d.d.wikinetz.manager.ArticleManager - Artikel erstellt: ID=1, Titel='hallo', Autor=admin
 2025-09-25 09:39:33 INFO  d.d.wikinetz.manager.ArticleManager - Artikel erstellt: ID=1, Titel='wrew', Autor=admin
 2025-09-25 09:41:29 INFO  d.d.wikinetz.manager.ArticleManager - Artikel gelöscht: ID=1, Titel='wrew'
+2025-09-25 12:54:36 INFO  d.d.wikinetz.service.AuthServiceImp - AuthServiceImp initialisiert
+2025-09-25 12:54:54 INFO  d.d.wikinetz.service.AuthServiceImp - Login-Versuch für Benutzer 'admin'
+2025-09-25 12:54:54 INFO  d.d.wikinetz.service.AuthServiceImp - Benutzer 'admin' erfolgreich eingeloggt
+2025-09-25 12:55:10 ERROR d.d.wikinetz.manager.ArticleManager - Ungültiger Titel beim Erstellen eines Artikels
+2025-09-25 13:02:27 INFO  d.d.wikinetz.service.AuthServiceImp - AuthServiceImp initialisiert
+2025-09-25 13:02:53 INFO  d.d.wikinetz.service.AuthServiceImp - Login-Versuch für Benutzer 'admin'
+2025-09-25 13:02:53 INFO  d.d.wikinetz.service.AuthServiceImp - Benutzer 'admin' erfolgreich eingeloggt
+2025-09-25 13:03:56 ERROR d.d.wikinetz.manager.ArticleManager - Ungültiger Titel beim Erstellen eines Artikels
+2025-09-25 13:04:47 DEBUG d.d.wikinetz.manager.ArticleManager - Alle Artikel abgerufen. Anzahl=0
+2025-09-25 13:06:21 INFO  d.d.wikinetz.manager.ArticleManager - Artikel erstellt: ID=1, Titel='qwaesrdft', Autor=admin
+2025-09-25 13:06:39 DEBUG d.d.wikinetz.manager.ArticleManager - Alle Artikel abgerufen. Anzahl=1
+2025-09-25 13:08:58 WARN  d.d.wikinetz.manager.ArticleManager - Artikel nicht gefunden: ID=777
+2025-09-25 13:10:41 INFO  d.d.wikinetz.service.AuthServiceImp - Login-Versuch für Benutzer 'unbekant'
+2025-09-25 13:10:41 WARN  d.d.wikinetz.service.AuthServiceImp - Login fehlgeschlagen: Benutzer 'unbekant' nicht gefunden
+2025-09-25 13:10:53 INFO  d.d.wikinetz.service.AuthServiceImp - AuthServiceImp initialisiert
+2025-09-25 13:11:04 INFO  d.d.wikinetz.service.AuthServiceImp - Login-Versuch für Benutzer 'unbekannt'
+2025-09-25 13:11:04 WARN  d.d.wikinetz.service.AuthServiceImp - Login fehlgeschlagen: Benutzer 'unbekannt' nicht gefunden
+2025-09-25 13:11:44 INFO  d.d.wikinetz.service.AuthServiceImp - Login-Versuch für Benutzer 'admin'
+2025-09-25 13:11:44 WARN  d.d.wikinetz.service.AuthServiceImp - Login fehlgeschlagen: Falsches Passwort für Benutzer 'admin'
+2025-09-25 13:12:19 INFO  d.d.wikinetz.service.AuthServiceImp - Login-Versuch für Benutzer 'sadkkf'
+2025-09-25 13:12:19 WARN  d.d.wikinetz.service.AuthServiceImp - Login fehlgeschlagen: Benutzer 'sadkkf' nicht gefunden
+2025-09-25 13:13:13 INFO  d.d.wikinetz.service.AuthServiceImp - Login-Versuch für Benutzer 'Shabana'
+2025-09-25 13:13:13 INFO  d.d.wikinetz.service.AuthServiceImp - Benutzer 'Shabana' erfolgreich eingeloggt
+2025-09-25 13:13:35 INFO  d.d.wikinetz.service.AuthServiceImp - Login-Versuch für Benutzer 'shabana'
+2025-09-25 13:13:35 WARN  d.d.wikinetz.service.AuthServiceImp - Login fehlgeschlagen: Benutzer 'shabana' nicht gefunden
+2025-09-25 13:14:06 INFO  d.d.wikinetz.service.AuthServiceImp - Login-Versuch für Benutzer 'Shabana'
+2025-09-25 13:14:07 INFO  d.d.wikinetz.service.AuthServiceImp - Benutzer 'Shabana' erfolgreich eingeloggt
+2025-09-25 13:15:40 INFO  d.d.wikinetz.service.AuthServiceImp - Login-Versuch für Benutzer 'admin'
+2025-09-25 13:15:40 INFO  d.d.wikinetz.service.AuthServiceImp - Benutzer 'admin' erfolgreich eingeloggt
+2025-09-25 13:18:06 INFO  d.d.wikinetz.service.AuthServiceImp - Login-Versuch für Benutzer 'a'
+2025-09-25 13:18:06 INFO  d.d.wikinetz.service.AuthServiceImp - Benutzer 'a' erfolgreich eingeloggt
+2025-09-25 13:18:18 DEBUG d.d.wikinetz.manager.ArticleManager - Alle Artikel abgerufen. Anzahl=0

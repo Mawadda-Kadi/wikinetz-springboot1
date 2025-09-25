@@ -1,7 +1,11 @@
 package de.davaso.wikinetz.ui;
 
 import de.davaso.wikinetz.api.*;
+import de.davaso.wikinetz.exception.ArticleNotFoundException;
+import de.davaso.wikinetz.exception.InvalidArticleException;
 import de.davaso.wikinetz.model.*;
+import de.davaso.wikinetz.exception.AuthenticationException;
+import de.davaso.wikinetz.exception.AuthorizationException;
 
 import java.util.*;
 
@@ -97,6 +101,8 @@ public class ConsoleUI {
         }
         // set original author (logged-in user)
         User author = auth.getCurrentUser().orElse(null);
+
+        try {
         Article a = articles.addArticle(title, content, category, author);
         // Erstversion anlegen
         addMediaToArticle(a.getArticleId());
@@ -105,6 +111,13 @@ public class ConsoleUI {
         var snaps = currentMediaSnapshots(a.getArticleId());
         versions.ensureInitial(a, snaps);
         System.out.println("Hinzugefügt: " + a);
+        } catch (InvalidArticleException e) {
+            System.out.println("Fehler beim Hinzufügen des Artikels: " + e.getMessage());
+        } catch (Exception e) {
+            // Fängt alle anderen unerwarteten Fehler ab
+            System.out.println("Unerwarteter Fehler: " + e.getMessage());
+            e.printStackTrace(); // Optional für Debugging
+        }
     }
 
     private void addMediaToArticle(int articleId) {
@@ -296,6 +309,11 @@ public class ConsoleUI {
 
         } catch (NumberFormatException e) {
             System.out.println("Bitte eine Zahl eingeben.");
+        } catch (ArticleNotFoundException e) {
+            System.out.println("Fehler: " + e.getMessage());
+        } catch (Exception e) {
+            System.out.println("Unerwarteter Fehler: " + e.getMessage());
+            e.printStackTrace();
 
         }
     }
@@ -309,13 +327,10 @@ public class ConsoleUI {
         String idStr = scanner.nextLine().trim();
         try {
             int id = Integer.parseInt(idStr);
-            Article a = articles.findArticleById(id);
-            if (a == null) {
-                System.out.println("Kein Artikel mit ID " + id);
-                return;
-            }
+
 
             User current = auth.getCurrentUser().orElse(null);
+            Article a = articles.getArticleById(id); // Exception wird geworfen, falls nicht gefunden
             boolean isAdmin = auth.hasAnyRole(Role.ADMIN);
             boolean isOriginalAuthor = (current != null && a.getCreatorId() == current.getUserId());
 
@@ -323,14 +338,16 @@ public class ConsoleUI {
                 System.out.println("Zugriff verweigert. Nur ADMIN oder der ursprüngliche Autor darf löschen.");
                 return;
             }
-            boolean ok = articles.deleteArticleById(id);
-            if (ok) {
-                System.out.println("Gelöscht: " + id);
-            } else {
-                System.out.println("Kein Artikel mit ID " + id);
-            }
+            articles.deleteArticleById(id); // Exception wird ebenfalls geworfen, falls nicht gefunden
+            System.out.println("Artikel gelöscht: " + id);
+
         } catch (NumberFormatException e) {
-            System.out.println("Bitte eine Zahl eingeben.");
+            System.out.println("Bitte eine gültige Zahl eingeben.");
+        } catch (ArticleNotFoundException e) {
+            System.out.println("Fehler: " + e.getMessage());
+        } catch (Exception e) {
+            System.out.println("Unerwarteter Fehler: " + e.getMessage());
+            e.printStackTrace();
         }
     }
 
@@ -346,11 +363,7 @@ public class ConsoleUI {
         String idStr = scanner.nextLine().trim();
         try {
             int articleId = Integer.parseInt(idStr);
-            Article article = articles.getArticleById(articleId);
-            if (article == null) {
-                System.out.println("Artikel nicht gefunden.");
-                return;
-            }
+            Article article = articles.getArticleById(articleId); // Exception wird geworfen, falls nicht gefunden
 
             System.out.println("Aktueller Titel: " + article.getTitle());
             System.out.print("Neuer Titel (leer lassen für keine Änderung): ");
@@ -389,6 +402,11 @@ public class ConsoleUI {
 
         } catch (NumberFormatException e) {
             System.out.println("Ungültige Artikel-ID.");
+        } catch (ArticleNotFoundException e) {
+            System.out.println("Fehler: " + e.getMessage());
+        } catch (Exception e) {
+            System.out.println("Unerwarteter Fehler: " + e.getMessage());
+            e.printStackTrace();
         }
     }
 
@@ -998,17 +1016,21 @@ public class ConsoleUI {
             System.out.println("Registriert: " + u.getUsername() + " (" + u.getRole() + ")");
             // Automatisches Login nur bei Selbstregistrierung (wenn momentan niemand eingeloggt ist)
             if (!auth.isLoggedIn()) {
-                boolean loggedIn = auth.login(u.getUsername(), password);
-                if (loggedIn) {
+                try {
+                    auth.login(u.getUsername(), password);
                     System.out.println("Du bist jetzt eingeloggt als " + u.getUsername() + " (" + u.getRole() + ").");
-                } else {
-                    System.out.println("Hinweis: Bitte jetzt mit deinen Zugangsdaten einloggen.");
+                } catch (AuthenticationException e) {
+                    System.out.println("Hinweis: Login nach Registrierung fehlgeschlagen: " + e.getMessage());
                 }
             } else if (auth.hasAnyRole(Role.ADMIN)) {
                 System.out.println("Hinweis: Admin bleibt eingeloggt. Neuer Nutzer muss sich selbst einloggen.");
             }
+
         } catch (IllegalArgumentException ex) {
-            System.out.println("Fehler: " + ex.getMessage());
+            System.out.println("Fehler bei Registrierung: " + ex.getMessage());
+        } catch (Exception ex) {
+            System.out.println("Unerwarteter Fehler bei Registrierung: " + ex.getMessage());
+            ex.printStackTrace();
         }
     }
 
@@ -1029,8 +1051,16 @@ public class ConsoleUI {
         String username = scanner.nextLine().trim();
         System.out.print("Passwort: ");
         String password = scanner.nextLine();
-        System.out.println(auth.login(username, password) ? "Login erfolgreich." :
-                "Login fehlgeschlagen (Benutzer unbekannt, Konto deaktiviert oder Passwort falsch).");
+
+        try {
+            auth.login(username, password);
+            System.out.println("Login erfolgreich.");
+        } catch (AuthenticationException e) {
+            System.out.println("Login fehlgeschlagen: " + e.getMessage());
+        } catch (Exception e) {
+            System.out.println("Unerwarteter Fehler beim Login: " + e.getMessage());
+            e.printStackTrace();
+        }
     }
     private void logout() {
         if (!auth.isLoggedIn()) {

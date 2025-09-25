@@ -3,6 +3,8 @@ import de.davaso.wikinetz.api.AuthService;
 import de.davaso.wikinetz.api.PasswordHasher;
 import de.davaso.wikinetz.api.UserRepository;
 import de.davaso.wikinetz.model.*;
+import de.davaso.wikinetz.exception.AuthenticationException;
+import de.davaso.wikinetz.exception.AuthorizationException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -36,16 +38,16 @@ public class AuthServiceImp implements AuthService {
         var userOpt = userStore.findByUsername(username);
         if (userOpt.isEmpty()) {
             logger.warn("Login fehlgeschlagen: Benutzer '{}' nicht gefunden", username);
-            return false;
+            throw new AuthenticationException("Benutzer '" + username + "' nicht gefunden");
         }
         var user = userOpt.get();
         if (!user.isEnabled()) {
             logger.warn("Login fehlgeschlagen: Benutzer '{}' ist deaktiviert", username);
-            return false;
+            throw new AuthenticationException("Benutzer '" + username + "' ist deaktiviert");
         }
         if (!hasher.matches(rawPassword, user.getPasswordHash())) {
             logger.warn("Login fehlgeschlagen: Falsches Passwort für Benutzer '{}'", username);
-            return false;
+            throw new AuthenticationException("Falsches Passwort für Benutzer '" + username + "'");
         }
         this.currentUser = user;
         logger.info("Benutzer '{}' erfolgreich eingeloggt", username);
@@ -72,7 +74,7 @@ public class AuthServiceImp implements AuthService {
         if (!hasAnyRole(roles)) {
             String username = currentUser != null ? currentUser.getUsername() : "ANONYMOUS";
             logger.error("Zugriff verweigert für Benutzer '{}', erforderliche Rollen: {}", username, roles);
-            throw new RuntimeException("Zugriff verweigert: fehlende Berechtigung.");
+            throw new AuthorizationException("Zugriff verweigert: fehlende Berechtigung für Benutzer '" + username + "'");
         } else {
             logger.debug("Berechtigungsprüfung erfolgreich für Benutzer '{}'", currentUser.getUsername());
         }
