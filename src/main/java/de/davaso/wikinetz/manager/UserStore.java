@@ -7,8 +7,10 @@ import de.davaso.wikinetz.model.Role;
 import de.davaso.wikinetz.model.User;
 
 import java.util.*;
+import org.springframework.stereotype.Repository;
 
 
+@Repository
 public class UserStore implements UserRepository{
 
     private final PasswordHasher hasher;

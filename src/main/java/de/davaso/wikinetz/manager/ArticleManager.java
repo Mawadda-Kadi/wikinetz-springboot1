@@ -10,10 +10,11 @@ import de.davaso.wikinetz.exception.ArticleNotFoundException;
 import de.davaso.wikinetz.exception.InvalidArticleException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Service;
 
 import java.util.*;
 
-
+@Service
 public class ArticleManager implements ArticleService{
 
     // Speichert alle Artikel im Speicher, während das Programm läuft
@@ -84,14 +85,12 @@ public class ArticleManager implements ArticleService{
     public boolean deleteArticleById(int id) {
 
         Article removed = articles.remove(id);
-        if (removed != null) {
-            logger.info("Artikel gelöscht: ID={}, Titel='{}'", id);
+        if (removed == null) {
+            logger.warn("Artikel nicht gefunden: ID={}", id);
             throw new ArticleNotFoundException(id);
-
         }
         logger.info("Artikel gelöscht: ID={}, Titel='{}'", id, removed.getTitle());
         return true;
-
     }
 
   //editArticle

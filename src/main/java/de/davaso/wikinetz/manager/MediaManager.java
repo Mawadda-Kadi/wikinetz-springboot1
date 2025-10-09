@@ -6,9 +6,11 @@ import de.davaso.wikinetz.model.Media;
 import de.davaso.wikinetz.model.MediaType;
 import de.davaso.wikinetz.model.MediaSnapshot;
 
+import org.springframework.stereotype.Service;
 import java.util.ArrayList;
 import java.util.List;
 
+@Service
 public class MediaManager implements MediaService {
     private final List<Media> mediaList = new ArrayList<>();
     private final IdGenerator idGen;

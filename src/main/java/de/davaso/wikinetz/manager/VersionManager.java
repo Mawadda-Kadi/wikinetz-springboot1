@@ -9,8 +9,10 @@ import de.davaso.wikinetz.model.MediaSnapshot;
 import java.time.LocalDateTime;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicLong;
+import org.springframework.stereotype.Service;
 
 
+@Service
 public class VersionManager implements VersionService {
 
     // articleId -> chronological versions
