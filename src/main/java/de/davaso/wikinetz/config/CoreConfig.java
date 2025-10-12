@@ -21,7 +21,10 @@ public class CoreConfig {
     @Bean public MediaManager mediaManager(IdGenerator idGen) {
         return new MediaManager(idGen);
     }
-    @Bean public VersionManager versionManager() { return new VersionManager(); }
+    @Bean public VersionManager versionManager(ArticleManager articleManager) {
+        return new VersionManager(articleManager);
+    }
+
 
     @Bean public UserStore userStore(PasswordHasher hasher) {
         // ensures we can create authors quickly in the controller

@@ -19,6 +19,11 @@ public class VersionManager implements VersionService {
     private final Map<Integer, List<Version>> versionsByArticle = new HashMap<>();
     // optional, for global audit ordering (monotonic across all articles)
     private final AtomicLong globalSeq = new AtomicLong(0);
+    private final ArticleManager articleManager;
+
+    public VersionManager(ArticleManager articleManager) {
+        this.articleManager = articleManager;
+    }
 
     private List<Version> bucket(int articleId) {
         return versionsByArticle.computeIfAbsent(articleId, id -> new ArrayList<>());
@@ -106,6 +111,14 @@ public class VersionManager implements VersionService {
         snapshot(a, editor, (note == null || note.isBlank())
                 ? ("Wiederhergestellt aus v" + versionNumber) : note);
         return true;
+    }
+
+    public boolean restoreVersion(int articleId, int versionNumber) {
+        Article article = articleManager.findArticleById(articleId);
+        if (article == null) {
+            return false;
+        }
+        return restore(article, versionNumber, null, null);
     }
 
     public boolean clearForArticle(int articleId) {

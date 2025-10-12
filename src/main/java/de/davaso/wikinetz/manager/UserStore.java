@@ -66,6 +66,11 @@ public class UserStore implements UserRepository{
         return u;
     }
 
+    public boolean matchesPassword(User user, String rawPassword) {
+        return hasher.matches(rawPassword, user.getPasswordHash());
+    }
+
+
     @Override
     public void updatePassword(User user, String newRawPassword) {
         user.setPasswordHash(hasher.hash(newRawPassword));
