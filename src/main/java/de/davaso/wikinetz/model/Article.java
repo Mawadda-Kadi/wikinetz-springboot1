@@ -1,84 +1,44 @@
 package de.davaso.wikinetz.model;
 
+import jakarta.persistence.*;
+import lombok.*;
+
 import java.time.LocalDateTime;
 
-
+@Entity
+@Table(name = "articles")
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
+@ToString
+@EqualsAndHashCode(onlyExplicitlyIncluded = true)
 public class Article {
-    private final int articleId;
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @EqualsAndHashCode.Include
+    private Integer articleId;
+
+    @Column(nullable = false)
     private String title;
+
+    @Column(columnDefinition = "TEXT")
     private String content;
+
+    @Enumerated(EnumType.STRING)
     private Category category;
-    private final int creatorId;
-    private final String creatorUsername;
-    private LocalDateTime createdAt;
-    private LocalDateTime updatedAt;
 
+    @ManyToOne(optional = false, fetch = FetchType.LAZY)
+    @JoinColumn(name = "creator_id")
+    @ToString.Exclude  // avoid infinite recursion
+    private User creator;
 
-    // Article Constructor
-    public Article(int articleId, String title, String content, Category category, int creatorId, String creatorUsername) {
+    private LocalDateTime createdAt = LocalDateTime.now();
+    private LocalDateTime updatedAt = LocalDateTime.now();
 
-        this.articleId = articleId;
-        this.title = title;
-        this.content = content;
-        this.category = category;
-        this.creatorId = creatorId;
-        this.creatorUsername = creatorUsername;
-        this.createdAt = LocalDateTime.now();
-        this.updatedAt = this.createdAt;
-    }
-
-    // Getters
-    public int getArticleId() {
-        return articleId;
-    }
-    public String getTitle() {
-        return title;
-    }
-    public String getContent() {
-        return content;
-    }
-    public Category getCategory() {
-        return category;
-    }
-    public int getCreatorId() { return creatorId; }
-    public String getCreatorUsername() { return creatorUsername; }
-    public LocalDateTime getCreatedAt() {
-        return createdAt;
-    }
-    public LocalDateTime getUpdatedAt() {
-        return updatedAt;
-    }
-
-    //Setters
-    public void setTitle(String title) {
-        this.title = title;
-        touch();
-    }
-
-    public void setContent(String content) {
-        this.content = content;
-        touch();
-    }
-
-    public void setCategory(Category category) {
-        this.category = category;
-        touch();
-    }
-
-    // touch() refreshes the “last modified” timestamp.
-    private void touch() {
-        this.updatedAt = java.time.LocalDateTime.now();
-    }
-
-    // toString() runs whenever Java needs a string for my object
-    // I don’t have to call it by name most of the time. it’s used implicitly
-    @Override
-    public String toString() {
-        return "Article{" +
-                "id= " +articleId +
-                ", title='" + title + '\'' +
-                ", content='" + content + '\'' +
-                ", category=" + category +
-                '}';
+    @PreUpdate
+    public void onUpdate() {
+        this.updatedAt = LocalDateTime.now();
     }
 }

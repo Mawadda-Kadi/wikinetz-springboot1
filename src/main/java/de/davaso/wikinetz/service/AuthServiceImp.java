@@ -1,4 +1,5 @@
 package de.davaso.wikinetz.service;
+
 import de.davaso.wikinetz.api.AuthService;
 import de.davaso.wikinetz.api.PasswordHasher;
 import de.davaso.wikinetz.api.UserRepository;

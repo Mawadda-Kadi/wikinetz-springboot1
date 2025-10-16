@@ -1,8 +1,10 @@
 package de.davaso.wikinetz.model;
 
+import lombok.Getter;
 
 import java.util.Optional;
 
+@Getter
 public enum Category {
     BACKEND(1, "Backend-Entwicklung"),
     FRONTEND(2, "Frontend-Entwicklung"),
@@ -13,24 +15,14 @@ public enum Category {
     private final int categoryId;
     private final String categoryName;
 
-
-
     Category(int categoryId, String categoryName) {
         this.categoryId = categoryId;
         this.categoryName = categoryName;
     }
 
-    public int getCategoryId() {
-        return categoryId;
-    }
-
-    public String getCategoryName() {
-        return categoryName;
-    }
-
-    public static Optional<Category> getCategoryById(int id){
+    public static Optional<Category> getCategoryById(int id) {
         for (Category c : values()) {
-            if (c.categoryId == id) return java.util.Optional.of(c);
+            if (c.categoryId == id) return Optional.of(c);
         }
         return Optional.empty();
     }
