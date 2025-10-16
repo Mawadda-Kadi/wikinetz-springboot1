@@ -1,8 +1,8 @@
 package de.davaso.wikinetz.web;
 
-import de.davaso.wikinetz.api.dto.UserDto;
+import de.davaso.wikinetz.dto.UserDto;
 import de.davaso.wikinetz.exception.AuthorizationException;
-import de.davaso.wikinetz.manager.UserStore;
+import de.davaso.wikinetz.service.UserService;
 import de.davaso.wikinetz.model.Role;
 import de.davaso.wikinetz.web.security.JwtUtil;
 import org.springframework.http.ResponseEntity;
@@ -14,10 +14,10 @@ import java.util.List;
 @RequestMapping("/api/users")
 public class UserController {
 
-    private final UserStore userStore;
+    private final UserService userService;
 
-    public UserController(UserStore userStore) {
-        this.userStore = userStore;
+    public UserController(UserService userService) {
+        this.userService = userService;
     }
 
     @DeleteMapping("/{username}")
@@ -29,13 +29,13 @@ public class UserController {
             throw new AuthorizationException("Access denied: ADMIN only");
         }
 
-        userStore.deleteByUsername(username);
+        userService.deleteByUsername(username);
         return ResponseEntity.ok("User " + username + " deleted");
     }
 
     @GetMapping
     public List<UserDto> list() {
-        return userStore.listAll().stream()
+        return userService.listAll().stream()
                 .map(u -> new UserDto(u.getUserId(), u.getUsername(), u.getEmail(), u.getRole(), u.isEnabled()))
                 .toList();
     }

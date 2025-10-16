@@ -6,6 +6,8 @@ import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.List;
 
+
+// Spring Data generates CRUD methods automatically
 public interface ArticleRepository extends JpaRepository<Article, Integer> {
     List<Article> findByCreator(User creator);
     List<Article> findByTitleContainingIgnoreCase(String keyword);

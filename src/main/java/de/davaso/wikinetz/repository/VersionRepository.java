@@ -10,4 +10,5 @@ import java.util.Optional;
 public interface VersionRepository extends JpaRepository<Version, Long> {
     List<Version> findByArticleOrderByVersionNumberAsc(Article article);
     Optional<Version> findTopByArticleOrderByVersionNumberDesc(Article article);
+    Optional<Version> findByArticleAndVersionNumber(Article article, int versionNumber);
 }

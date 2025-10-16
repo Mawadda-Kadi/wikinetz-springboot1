@@ -4,6 +4,7 @@ import de.davaso.wikinetz.model.Article;
 import de.davaso.wikinetz.model.User;
 import de.davaso.wikinetz.model.Version;
 import de.davaso.wikinetz.repository.VersionRepository;
+import de.davaso.wikinetz.repository.ArticleRepository;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -14,9 +15,11 @@ import java.util.Optional;
 public class VersionService {
 
     private final VersionRepository versionRepository;
+    private final ArticleRepository articleRepository;
 
-    public VersionService(VersionRepository versionRepository) {
+    public VersionService(VersionRepository versionRepository, ArticleRepository articleRepository) {
         this.versionRepository = versionRepository;
+        this.articleRepository = articleRepository;
     }
 
     public Version createInitialVersion(Article article, User creator) {
@@ -49,5 +52,29 @@ public class VersionService {
     public List<Version> listVersions(Article article) {
         return versionRepository.findByArticleOrderByVersionNumberAsc(article);
     }
+
+    public boolean restoreVersion(Article article, int versionNumber) {
+        return versionRepository.findByArticleOrderByVersionNumberAsc(article)
+                .stream()
+                .filter(v -> v.getVersionNumber() == versionNumber)
+                .findFirst()
+                .map(v -> {
+                    // Apply version content to the current article
+                    article.setTitle(v.getTitle());
+                    article.setContent(v.getContent());
+                    article.setCategory(v.getCategory());
+
+                    // Save the updated article
+                    articleRepository.save(article);
+
+                    // Create a new snapshot documenting the restore
+                    snapshot(article, null, "Restored from v" + versionNumber);
+
+                    return true;
+                })
+                .orElse(false);
+    }
 }
+
+
 

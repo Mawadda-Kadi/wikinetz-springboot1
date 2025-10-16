@@ -1,4 +1,4 @@
-package de.davaso.wikinetz.api.dto;
+package de.davaso.wikinetz.dto;
 
 import de.davaso.wikinetz.model.MediaType;
 
