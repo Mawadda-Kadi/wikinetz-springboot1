@@ -1,13 +1,23 @@
-version: "4.48.0"
 services:
+  app:
+    build: .
+    ports:
+      - "8080:8080"
+    depends_on:
+      - db
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://db:5432/wikinetz
+      SPRING_DATASOURCE_USERNAME: postgres
+      SPRING_DATASOURCE_PASSWORD: secret
+      SPRING_JPA_HIBERNATE_DDL_AUTO: update
+
   db:
     image: postgres:15
-    container_name: wikinetz_db
     restart: always
     environment:
       POSTGRES_DB: wikinetz
-      POSTGRES_USER: wikinetz_user
-      POSTGRES_PASSWORD: wikinetz_pass
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: secret
     ports:
       - "5432:5432"
     volumes:
@@ -15,4 +25,3 @@ services:
 
 volumes:
   postgres_data:
-

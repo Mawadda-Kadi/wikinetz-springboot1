@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title th:text="${title} ?: 'WikiNetz'">WikiNetz</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+</head>
+<body>
+<header>
+    <nav>
+        <a th:href="@{/}">🏠 Startseite</a> |
+        <a th:href="@{/articles/new}">➕ Neuer Artikel</a>
+    </nav>
+    <hr>
+</header>
+
+<div th:fragment="content">
+    <!-- Inhalte hier einsetzen -->
+</div>
+
+<footer>
+    <hr>
+    <p>WikiNetz © 2025</p>
+</footer>
+</body>
+</html>

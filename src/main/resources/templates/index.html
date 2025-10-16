@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      th:replace="fragments/header :: content">
+<div>
+    <h1>Willkommen bei WikiNetz</h1>
+    <p>Hier findest du alle Artikel und Kategorien.</p>
+
+    <h2>Neueste Artikel</h2>
+    <ul>
+        <li th:each="article : ${articles}">
+            <a th:href="@{/articles/{id}(id=${article.articleId})}"
+               th:text="${article.title}"></a>
+            <span> – <span th:text="${article.category}"></span></span>
+        </li>
+    </ul>
+</div>
+</html>
+
