@@ -1,14 +1,14 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org"
       th:replace="fragments/header :: content">
-<div>
-    <h1 th:text="${article.title}">Titel</h1>
-    <p th:text="${article.content}">Inhalt</p>
+    <div>
+        <h1 th:text="${article.title}">Titel</h1>
+        <p th:text="${article.content}">Inhalt</p>
 
-    <p>Kategorie: <strong th:text="${article.category}"></strong></p>
-    <p>Autor: <span th:text="${article.creator.username}"></span></p>
+        <p>Kategorie: <strong th:text="${article.category}"></strong></p>
+        <p>Autor: <span th:text="${article.creator.username}"></span></p>
 
-    <a th:href="@{/articles/edit/{id}(id=${article.articleId})}">✏️ Bearbeiten</a> |
-    <a th:href="@{/}">← Zurück zur Startseite</a>
-</div>
+        <a th:href="@{/articles/edit/{id}(id=${article.articleId})}">✏️ Bearbeiten</a> |
+        <a th:href="@{/}">← Zurück zur Startseite</a>
+    </div>
 </html>

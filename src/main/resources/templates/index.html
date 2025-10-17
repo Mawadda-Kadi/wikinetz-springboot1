@@ -1,6 +1,15 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org"
-      th:replace="fragments/header :: content">
+<html xmlns:th="http://www.thymeleaf.org" lang="de">
+<head>
+    <meta charset="UTF-8">
+    <title th:text="${title} ?: 'WikiNetz'">WikiNetz</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+</head>
+<body>
+
+<!-- Header Fragment -->
+<div th:replace="fragments/header :: content"></div>
+
 <div>
     <h1>Willkommen bei WikiNetz</h1>
     <p>Hier findest du alle Artikel und Kategorien.</p>
@@ -14,5 +23,6 @@
         </li>
     </ul>
 </div>
-</html>
 
+</body>
+</html>

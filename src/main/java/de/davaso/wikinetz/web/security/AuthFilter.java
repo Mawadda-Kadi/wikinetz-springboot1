@@ -1,4 +1,4 @@
-package de.davaso.wikinetz.web;
+package de.davaso.wikinetz.web.security;
 
 import jakarta.servlet.*;
 import jakarta.servlet.http.HttpServletRequest;

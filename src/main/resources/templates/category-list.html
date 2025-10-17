@@ -1,0 +1,14 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      th:replace="fragments/header :: content">
+    <div>
+        <h1 th:text="'Kategorie: ' + ${categoryName}"></h1>
+        <ul>
+            <li th:each="article : ${articles}">
+                <a th:href="@{/articles/{id}(id=${article.articleId})}"
+                   th:text="${article.title}"></a>
+            </li>
+        </ul>
+        <a th:href="@{/}">← Zurück zur Startseite</a>
+    </div>
+</html>

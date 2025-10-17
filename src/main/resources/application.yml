@@ -3,11 +3,10 @@ server:
 
 spring:
   datasource:
-    url: jdbc:postgresql://db:5432/wikinetz
+    url: jdbc:postgresql://db:5432/postgres
     username: postgres
-    password: secret
+    password: postgres
     driver-class-name: org.postgresql.Driver
-
   jpa:
     hibernate:
       ddl-auto: update

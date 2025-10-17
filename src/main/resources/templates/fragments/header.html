@@ -4,6 +4,8 @@
     <meta charset="UTF-8">
     <title th:text="${title} ?: 'WikiNetz'">WikiNetz</title>
     <link rel="stylesheet" th:href="@{/css/style.css}">
+    <link rel="icon" type="image/x-icon" th:href="@{/favicon.ico}">
+
 </head>
 <body>
 <header>
@@ -12,6 +14,15 @@
         <a th:href="@{/articles/new}">➕ Neuer Artikel</a>
     </nav>
     <hr>
+    <div th:if="${successMessage}"
+         style="background-color: #d4edda; color: #155724; padding: 10px; margin-bottom: 15px; border-radius: 4px;">
+        <p th:text="${successMessage}"></p>
+    </div>
+
+    <div th:if="${errorMessage}"
+         style="background-color: #f8d7da; color: #721c24; padding: 10px; margin-bottom: 15px; border-radius: 4px;">
+        <p th:text="${errorMessage}"></p>
+    </div>
 </header>
 
 <div th:fragment="content">
